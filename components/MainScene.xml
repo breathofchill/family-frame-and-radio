@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+
+    <children>
+        <!-- Solid Dark Background (1920x1080) -->
+        <Rectangle
+            id="background"
+            width="1920"
+            height="1080"
+            color="0x0D0D0DFF" />
+
+        <!-- Dual Full-Screen Photo Posters for Smooth Crossfading -->
+        <Poster
+            id="posterA"
+            width="1920"
+            height="1080"
+            loadWidth="1920"
+            loadHeight="1080"
+            loadDisplayMode="scaleToFit"
+            opacity="1.0" />
+
+        <Poster
+            id="posterB"
+            width="1920"
+            height="1080"
+            loadWidth="1920"
+            loadHeight="1080"
+            loadDisplayMode="scaleToFit"
+            opacity="0.0" />
+
+        <!-- Crossfade Animation: A -> B -->
+        <Animation
+            id="fadeAtoB"
+            duration="1.5"
+            easeFunction="linear">
+            <FloatFieldInterpolator
+                id="interpAOut"
+                key="[0.0, 1.0]"
+                keyValue="[1.0, 0.0]"
+                fieldToInterp="posterA.opacity" />
+            <FloatFieldInterpolator
+                id="interpBIn"
+                key="[0.0, 1.0]"
+                keyValue="[0.0, 1.0]"
+                fieldToInterp="posterB.opacity" />
+        </Animation>
+
+        <!-- Crossfade Animation: B -> A -->
+        <Animation
+            id="fadeBtoA"
+            duration="1.5"
+            easeFunction="linear">
+            <FloatFieldInterpolator
+                id="interpBOut"
+                key="[0.0, 1.0]"
+                keyValue="[1.0, 0.0]"
+                fieldToInterp="posterB.opacity" />
+            <FloatFieldInterpolator
+                id="interpAIn"
+                key="[0.0, 1.0]"
+                keyValue="[0.0, 1.0]"
+                fieldToInterp="posterA.opacity" />
+        </Animation>
+
+        <!-- Fallback Empty Folder Notice (Shown only if pkg:/images/ has no photos) -->
+        <Group id="emptyStateGroup" visible="false">
+            <Rectangle
+                translation="[260, 320]"
+                width="1400"
+                height="360"
+                color="0x1A1A1AEE" />
+            <Label
+                id="emptyTitleLabel"
+                translation="[310, 375]"
+                width="1300"
+                height="80"
+                font="font:LargeBoldSystemFont"
+                color="0xFFD54FFF"
+                horizAlign="center"
+                text="No Family Photos Found in pkg:/images/" />
+            <Label
+                id="emptyBodyLabel"
+                translation="[310, 470]"
+                width="1300"
+                height="160"
+                font="font:MediumSystemFont"
+                color="0xFFFFFFFF"
+                horizAlign="center"
+                wrap="true"
+                text="Drop your .jpg, .jpeg, or .png family photos into the images/ folder on your computer, re-zip, and sideload. Meanwhile, enjoy the live radio below!" />
+        </Group>
+
+        <!-- Top Toast Banner for Station/Vibe Changes & Status Updates -->
+        <Group id="toastGroup" translation="[360, 60]" visible="false">
+            <Rectangle
+                id="toastBg"
+                width="1200"
+                height="130"
+                color="0x000000D8" />
+            <!-- Gold Accent Top Bar -->
+            <Rectangle
+                width="1200"
+                height="8"
+                color="0xFFD54FFF" />
+            <Label
+                id="toastTitleLabel"
+                translation="[40, 22]"
+                width="1120"
+                height="48"
+                font="font:MediumBoldSystemFont"
+                color="0xFFD54FFF"
+                horizAlign="center"
+                text="NOW TUNING" />
+            <Label
+                id="toastMessageLabel"
+                translation="[40, 70]"
+                width="1120"
+                height="48"
+                font="font:LargeBoldSystemFont"
+                color="0xFFFFFFFF"
+                horizAlign="center"
+                text="Smooth Jazz" />
+        </Group>
+
+        <!-- Minimal Grandparent-Friendly Bottom HUD Bar -->
+        <Group id="hudGroup" translation="[0, 930]">
+            <!-- High-Contrast Semi-Transparent Dark Bar -->
+            <Rectangle
+                width="1920"
+                height="150"
+                color="0x000000CC" />
+            <!-- Subtle Divider Line -->
+            <Rectangle
+                width="1920"
+                height="4"
+                color="0xFFFFFF33" />
+
+            <!-- Left: Photo Counter & Slideshow Status -->
+            <Label
+                id="photoCounterLabel"
+                translation="[60, 24]"
+                width="520"
+                height="50"
+                font="font:MediumBoldSystemFont"
+                color="0xFFFFFFFF"
+                horizAlign="left"
+                text="Photo 1 of 1" />
+
+            <!-- Center-Right: Current Radio Vibe & Station Name -->
+            <Label
+                id="radioStatusLabel"
+                translation="[580, 24]"
+                width="1280"
+                height="50"
+                font="font:MediumBoldSystemFont"
+                color="0xFFD54FFF"
+                horizAlign="right"
+                text="Radio: Loading Smooth Jazz..." />
+
+            <!-- Bottom Row: Oversized, Clear Remote Control Hints -->
+            <Label
+                id="controlsHintLabel"
+                translation="[60, 86]"
+                width="1800"
+                height="46"
+                font="font:SmallBoldSystemFont"
+                color="0xDDDDDDFF"
+                horizAlign="center"
+                text="[Left/Right] Prev/Next Photo   |   [Up/Down] Change Music   |   [OK/Play] Pause Photos   |   [Replay / *] Mute Music" />
+        </Group>
+
+        <!-- Slideshow Auto-Advance Timer (12 Seconds) -->
+        <Timer
+            id="slideshowTimer"
+            repeat="true"
+            duration="12.0" />
+
+        <!-- Toast Auto-Hide Timer (4 Seconds) -->
+        <Timer
+            id="toastTimer"
+            repeat="false"
+            duration="4.0" />
+
+        <!-- Background Audio Node for Live MP3 Radio Streams -->
+        <Audio id="radioPlayer" />
+    </children>
+</component>

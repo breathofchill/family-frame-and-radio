@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="RadioTask" extends="Task">
+    <interface>
+        <!-- Input: Search tag for Radio Browser API (e.g., "smooth jazz", "oldies") -->
+        <field id="searchTag" type="string" />
+        <!-- Output: Array of station AA items [{ name: "...", url: "..." }] -->
+        <field id="stations" type="roArray" />
+        <!-- Output: Status message if fetch fails or succeeds -->
+        <field id="status" type="string" value="idle" />
+    </interface>
+
+    <script type="text/brightscript" uri="pkg:/components/RadioTask.brs" />
+</component>
