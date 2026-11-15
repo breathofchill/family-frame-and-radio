@@ -44,6 +44,9 @@ sub init()
     m.showAllBtnGroup = m.top.findNode("showAllBtnGroup")
     m.showAllBtnBorder = m.top.findNode("showAllBtnBorder")
     m.showAllBtnBg = m.top.findNode("showAllBtnBg")
+    m.shuffleBtnBorder = m.top.findNode("shuffleBtnBorder")
+    m.shuffleBtnBg = m.top.findNode("shuffleBtnBg")
+    m.shuffleBtnLabel = m.top.findNode("shuffleBtnLabel")
     m.stationsGridGroup = m.top.findNode("stationsGridGroup")
     m.gridFocusRing = m.top.findNode("gridFocusRing")
     m.stationsEmptyLabel = m.top.findNode("stationsEmptyLabel")
@@ -667,14 +670,24 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
     m.micBadgeBg.color = "0x1E88E5FF"
     m.showAllBtnBorder.color = "0x28354AFF"
     m.showAllBtnBg.color = "0x111A2BFF"
+    m.shuffleBtnBorder.color = "0x28354AFF"
+    m.shuffleBtnBg.color = "0x111A2BFF"
+    if m.isShuffleMode
+        m.shuffleBtnLabel.text = "Order: Shuffle"
+    else
+        m.shuffleBtnLabel.text = "Order: Storybook"
+    end if
     if m.stationsFocusArea = "search"
         if m.stationsTopFocusIdx = 0
             m.searchBoxBorder.color = "0xFFD54FFF"
             m.searchBoxBg.color = "0x1B2B48FF"
             m.micBadgeBg.color = "0x00E676FF"
-        else
+        else if m.stationsTopFocusIdx = 1
             m.showAllBtnBorder.color = "0xFFD54FFF"
             m.showAllBtnBg.color = "0x1B2B48FF"
+        else
+            m.shuffleBtnBorder.color = "0xFFD54FFF"
+            m.shuffleBtnBg.color = "0x1B2B48FF"
         end if
     end if
 
@@ -684,7 +697,7 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
         for i = 0 to 8
             m.stationCards[i].group.visible = false
         end for
-        m.stationsPageLabel.text = "0 Stations Found   •   Move Right to 'Show All 100' or Press [ * ] to Return to Photos"
+        m.stationsPageLabel.text = "0 Stations Found   •   Move Right to 'Show All 100' or Press [ Back ] to Return to Photos"
         return
     end if
 
@@ -741,7 +754,7 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
     end for
 
     m.gridFocusRing.visible = (m.stationsFocusArea = "grid")
-    m.stationsPageLabel.text = "Stations " + (pageStart + 1).ToStr() + "-" + (pageEnd + 1).ToStr() + " of " + total.ToStr() + "   •   [UP] at Top Row = Mic Search   •   [OK] Play   •   [Rew/FF] Page   •   [ * ] Back to Photos"
+    m.stationsPageLabel.text = "Stations " + (pageStart + 1).ToStr() + "-" + (pageEnd + 1).ToStr() + " of " + total.ToStr() + "   •   [UP] at Top Row = Mic Search   •   [OK] Play   •   [Rew/FF] Page   •   [ Back ] Photos"
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
@@ -774,11 +787,8 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         m.currentVibeIndex = (m.currentVibeIndex + 1) mod m.vibes.Count()
         loadCurrentVibe()
         return true
-    else if key = "options"
-        openStationsBrowser()
-        return true
     else if key = "OK"
-        toggleShuffleMode()
+        openStationsBrowser()
         return true
     else if key = "play"
         toggleSlideshowPause()
@@ -792,7 +802,7 @@ end function
 
 function handleStationsKeyEvent(key as String) as Boolean
     total = m.filteredStations.Count()
-    if key = "options" or key = "back"
+    if key = "back"
         closeStationsBrowser()
         return true
     else if key = "replay" or key = "instantreplay"
@@ -802,11 +812,11 @@ function handleStationsKeyEvent(key as String) as Boolean
 
     if m.stationsFocusArea = "search"
         if key = "left" and m.stationsTopFocusIdx > 0
-            m.stationsTopFocusIdx = 0
+            m.stationsTopFocusIdx = m.stationsTopFocusIdx - 1
             syncSearchFocusAnim()
             renderStationsGrid(false, 0)
-        else if key = "right" and m.stationsTopFocusIdx < 1
-            m.stationsTopFocusIdx = 1
+        else if key = "right" and m.stationsTopFocusIdx < 2
+            m.stationsTopFocusIdx = m.stationsTopFocusIdx + 1
             syncSearchFocusAnim()
             renderStationsGrid(false, 0)
         else if key = "down" and total > 0
@@ -816,11 +826,14 @@ function handleStationsKeyEvent(key as String) as Boolean
         else if key = "OK"
             if m.stationsTopFocusIdx = 0
                 openStationSearchDialog()
-            else
+            else if m.stationsTopFocusIdx = 1
                 filterStationsByQuery("")
                 m.stationsFocusArea = "grid"
                 syncSearchFocusAnim()
                 renderStationsGrid(true, -1)
+            else
+                toggleShuffleMode()
+                renderStationsGrid(false, 0)
             end if
         end if
         return true

@@ -25,7 +25,7 @@
             <Rectangle translation="[216, 266]" width="1488" height="408" color="0x10141DF5" />
             <Label id="emptyTitleLabel" translation="[260, 315]" width="1400" height="70" font="font:LargeBoldSystemFont" color="0xFFD54FFF" horizAlign="center" text="Welcome to Family Frame &amp; Radio" />
             <Label id="emptyBodyLabel" translation="[260, 405]" width="1400" height="150" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" wrap="true" text="Your live radio is playing below! To add 200+ family photos, drop .jpg, .jpeg, or .png photos into the images/ folder, re-zip, and sideload." />
-            <Label id="emptyHintLabel" translation="[260, 575]" width="1400" height="60" font="font:MediumSystemFont" color="0x80DEEAFF" horizAlign="center" text="Press [ * ] for 100 Radio Stations &amp; Voice Search, or [UP / DOWN] to Change Genres!" />
+            <Label id="emptyHintLabel" translation="[260, 575]" width="1400" height="60" font="font:MediumSystemFont" color="0x80DEEAFF" horizAlign="center" text="Press [ OK ] for 100 Radio Stations &amp; Voice Search, or [UP / DOWN] to Change Genres!" />
         </Group>
 
         <!-- Top-Right Living-Room Clock & Date -->
@@ -42,7 +42,7 @@
             <Rectangle translation="[5, 5]" width="1390" height="156" color="0x0B0E17F4" />
             <Label id="toastTitleLabel" translation="[40, 16]" width="1320" height="40" font="font:MediumBoldSystemFont" color="0xFFD54FFF" horizAlign="center" text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
             <Label id="toastMessageLabel" translation="[40, 62]" width="1320" height="52" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="100.3 K-LOVE Los Angeles" />
-            <Label id="toastSubLabel" translation="[40, 118]" width="1320" height="32" font="font:SmallestBoldSystemFont" color="0xB0BEC5FF" horizAlign="center" text="Press [UP / DOWN] to Change Genre   •   Press [ * ] to Browse &amp; Search All 100 Stations" />
+            <Label id="toastSubLabel" translation="[40, 118]" width="1320" height="32" font="font:SmallestBoldSystemFont" color="0xB0BEC5FF" horizAlign="center" text="Press [UP / DOWN] to Change Genre   •   Press [ OK ] to Browse &amp; Search All 100 Stations" />
         </Group>
         <Animation id="toastSlideAnim" duration="0.26" easeFunction="outCubic">
             <FloatFieldInterpolator id="toastOpacityInterp" key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="toastGroup.opacity" />
@@ -57,12 +57,12 @@
             <!-- Left: Photo Counter & Mode -->
             <Label id="photoHeaderLabel" translation="[48, 12]" width="560" height="26" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="FAMILY PHOTO ALBUM  •  STORYBOOK ORDER" />
             <Label id="photoCounterLabel" translation="[48, 38]" width="560" height="46" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="left" text="Photo 1 of 1" />
-            <Label id="photoSubLabel" translation="[48, 86]" width="620" height="28" font="font:SmallestBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="[Left/Right] Photo  •  [OK] Shuffle  •  [Play] Pause" />
+            <Label id="photoSubLabel" translation="[48, 86]" width="620" height="28" font="font:SmallestBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="[Left/Right] Photo  •  [Play] Pause  •  [Replay] Mute" />
 
             <!-- Right: Genre, Station, Live Song & Album Cover Art -->
             <Label id="radioHeaderLabel" translation="[640, 12]" width="1096" height="26" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="right" text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
             <Label id="radioStatusLabel" translation="[640, 38]" width="1096" height="44" font="font:MediumBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="100.3 K-LOVE Los Angeles" />
-            <Label id="nowPlayingLabel" translation="[640, 84]" width="1096" height="30" font="font:SmallestBoldSystemFont" color="0xA5D6A7FF" horizAlign="right" text="Live Broadcast  •  Press [ * ] for 100 Stations &amp; Voice Search" />
+            <Label id="nowPlayingLabel" translation="[640, 84]" width="1096" height="30" font="font:SmallestBoldSystemFont" color="0xA5D6A7FF" horizAlign="right" text="Live Broadcast  •  Press [ OK ] for 100 Stations &amp; Voice Search" />
 
             <!-- Album Cover Art Frame on Screensaver HUD -->
             <Group id="hudAlbumGroup" translation="[1758, 14]" scaleRotateCenter="[52, 52]">
@@ -81,21 +81,27 @@
             <Group id="stationsContentGroup" translation="[0, 0]">
                 <!-- Top Left: Brand Header & Voice Search Bar -->
                 <Label id="stationsHeaderTitle" translation="[80, 30]" width="980" height="50" font="font:LargeBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="PANDORA RADIO  •  100 STATIONS" />
-                <Label id="stationsSubHeader" translation="[80, 80]" width="980" height="30" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="left" text="Move UP to the Search Bar &amp; Press OK to Use Controller Mic or Keyboard   •   Press [ * ] for Photos" />
+                <Label id="stationsSubHeader" translation="[80, 80]" width="1060" height="30" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="left" text="Move UP to the Search Bar &amp; Press OK to Use Controller Mic   •   Press [ Back ] for Photos" />
 
                 <!-- Search Row (Move UP from Top Row of Stations to Focus!) -->
-                <Group id="searchBoxGroup" translation="[80, 120]" scaleRotateCenter="[390, 38]">
-                    <Rectangle id="searchBoxBorder" width="780" height="76" color="0x28354AFF" />
-                    <Rectangle id="searchBoxBg" translation="[4, 4]" width="772" height="68" color="0x111A2BFF" />
+                <Group id="searchBoxGroup" translation="[80, 120]" scaleRotateCenter="[280, 38]">
+                    <Rectangle id="searchBoxBorder" width="560" height="76" color="0x28354AFF" />
+                    <Rectangle id="searchBoxBg" translation="[4, 4]" width="552" height="68" color="0x111A2BFF" />
                     <Rectangle id="micBadgeBg" translation="[14, 14]" width="56" height="48" color="0x1E88E5FF" />
                     <Label id="micBadgeLabel" translation="[14, 22]" width="56" height="34" font="font:SmallestBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="MIC" />
-                    <Label id="searchBoxLabel" translation="[84, 18]" width="676" height="42" font="font:MediumBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="Press OK to Speak into Remote Mic or Type..." />
+                    <Label id="searchBoxLabel" translation="[82, 18]" width="458" height="42" font="font:MediumBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="Press OK for Mic / Search..." />
                 </Group>
 
-                <Group id="showAllBtnGroup" translation="[880, 120]" scaleRotateCenter="[130, 38]">
-                    <Rectangle id="showAllBtnBorder" width="260" height="76" color="0x28354AFF" />
-                    <Rectangle id="showAllBtnBg" translation="[4, 4]" width="252" height="68" color="0x111A2BFF" />
-                    <Label id="showAllBtnLabel" translation="[12, 18]" width="236" height="42" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="Show All 100" />
+                <Group id="showAllBtnGroup" translation="[660, 120]" scaleRotateCenter="[115, 38]">
+                    <Rectangle id="showAllBtnBorder" width="230" height="76" color="0x28354AFF" />
+                    <Rectangle id="showAllBtnBg" translation="[4, 4]" width="222" height="68" color="0x111A2BFF" />
+                    <Label id="showAllBtnLabel" translation="[10, 18]" width="210" height="42" font="font:SmallBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="Show All 100" />
+                </Group>
+
+                <Group id="shuffleBtnGroup" translation="[910, 120]" scaleRotateCenter="[115, 38]">
+                    <Rectangle id="shuffleBtnBorder" width="230" height="76" color="0x28354AFF" />
+                    <Rectangle id="shuffleBtnBg" translation="[4, 4]" width="222" height="68" color="0x111A2BFF" />
+                    <Label id="shuffleBtnLabel" translation="[10, 18]" width="210" height="42" font="font:SmallBoldSystemFont" color="0x80DEEAFF" horizAlign="center" text="Order: Storybook" />
                 </Group>
 
                 <!-- Top Right: Now Playing Hero Card with Live Album Cover & Equalizer -->
@@ -139,7 +145,7 @@
 
                 <!-- Bottom Bar Guide -->
                 <Rectangle translation="[80, 936]" width="1760" height="2" color="0xFFFFFF26" />
-                <Label id="stationsPageLabel" translation="[80, 954]" width="1760" height="44" font="font:SmallBoldSystemFont" color="0xEEEEEEFF" horizAlign="center" text="Showing 1 - 9 of 100   •   [UP] Search &amp; Voice Mic   •   [OK] Play Station   •   [Rew/FF] Page   •   [ * ] Return to Screensaver" />
+                <Label id="stationsPageLabel" translation="[80, 954]" width="1760" height="44" font="font:SmallBoldSystemFont" color="0xEEEEEEFF" horizAlign="center" text="Showing 1 - 9 of 100   •   [UP] Search &amp; Voice Mic   •   [OK] Play Station   •   [Rew/FF] Page   •   [ Back ] Return to Photos" />
             </Group>
         </Group>
 
