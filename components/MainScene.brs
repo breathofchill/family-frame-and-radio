@@ -25,6 +25,21 @@ sub init()
     m.clockTimer = m.top.findNode("clockTimer")
     m.radioPlayer = m.top.findNode("radioPlayer")
 
+    ' Pandora-for-TV 100-Station Browser Nodes
+    m.stationsOverlay = m.top.findNode("stationsOverlay")
+    m.stationsHeaderTitle = m.top.findNode("stationsHeaderTitle")
+    m.stationsNowPlayingLabel = m.top.findNode("stationsNowPlayingLabel")
+    m.searchBoxBorder = m.top.findNode("searchBoxBorder")
+    m.searchBoxBg = m.top.findNode("searchBoxBg")
+    m.searchBoxLabel = m.top.findNode("searchBoxLabel")
+    m.showAllBtnBorder = m.top.findNode("showAllBtnBorder")
+    m.showAllBtnBg = m.top.findNode("showAllBtnBg")
+    m.closeStationsBtnBorder = m.top.findNode("closeStationsBtnBorder")
+    m.closeStationsBtnBg = m.top.findNode("closeStationsBtnBg")
+    m.stationsGridGroup = m.top.findNode("stationsGridGroup")
+    m.stationsEmptyLabel = m.top.findNode("stationsEmptyLabel")
+    m.stationsPageLabel = m.top.findNode("stationsPageLabel")
+
     ' Slideshow State (Engineered for 200+ to 1,000+ Photos)
     m.orderedPhotos = []
     m.photos = []
@@ -34,6 +49,18 @@ sub init()
     m.isShuffleMode = false
     m.pendingPoster = ""
     m.currentSongTitle = ""
+
+    ' 100-Station Pandora-Style Browser State
+    m.allStations = getAll100Stations()
+    m.filteredStations = m.allStations
+    m.isStationsOpen = false
+    m.stationsFocusArea = "grid"
+    m.stationsTopFocusIdx = 0
+    m.stationsSelectedIdx = 0
+    m.stationsSearchQuery = ""
+    m.activePlayingUrl = ""
+    m.stationCards = []
+    buildStationGridUI()
 
     ' =========================================================================
     ' 9 MAIN GRANDPARENT-FRIENDLY RADIO GENRES
@@ -729,6 +756,11 @@ end sub
 function onKeyEvent(key as String, press as Boolean) as Boolean
     if not press then return false
 
+    ' If the Pandora-for-TV 100-Station Browser is open, handle its navigation
+    if m.isStationsOpen
+        return handleStationsKeyEvent(key)
+    end if
+
     ' Left / Right: Previous / Next Family Photo (resets slideshow timer)
     if key = "left"
         if m.photos.Count() > 0
@@ -775,9 +807,9 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         loadCurrentVibe()
         return true
 
-    ' Star (*) / Options: Switch to Next Radio Station within the Current Genre
+    ' Star (*) / Options: Open Pandora-for-TV 100-Station Browser & Search
     else if key = "options"
-        nextStationInGenre()
+        openStationsBrowser()
         return true
 
     ' OK: Toggle Shuffle vs. Storybook Order
@@ -798,3 +830,362 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
 
     return false
 end function
+
+' =============================================================================
+' PANDORA-FOR-TV 100-STATION BROWSER & SEARCH
+' =============================================================================
+
+sub buildStationGridUI()
+    m.stationCards = []
+    colX = [80, 670, 1260]
+    rowY = [226, 454, 682]
+
+    for i = 0 to 8
+        col = i mod 3
+        row = Int(i / 3)
+
+        cardGroup = CreateObject("roSGNode", "Group")
+        cardGroup.translation = [colX[col], rowY[row]]
+
+        border = CreateObject("roSGNode", "Rectangle")
+        border.width = 560
+        border.height = 204
+        border.color = "0x28354AFF"
+
+        bg = CreateObject("roSGNode", "Rectangle")
+        bg.translation = [5, 5]
+        bg.width = 550
+        bg.height = 194
+        bg.color = "0x101726FF"
+
+        accent = CreateObject("roSGNode", "Rectangle")
+        accent.translation = [5, 5]
+        accent.width = 16
+        accent.height = 194
+        accent.color = "0xFFD54FFF"
+
+        titleLbl = CreateObject("roSGNode", "Label")
+        titleLbl.translation = [36, 22]
+        titleLbl.width = 496
+        titleLbl.height = 96
+        titleLbl.font = "font:MediumBoldSystemFont"
+        titleLbl.color = "0xFFFFFFFF"
+        titleLbl.wrap = true
+
+        genreLbl = CreateObject("roSGNode", "Label")
+        genreLbl.translation = [36, 124]
+        genreLbl.width = 496
+        genreLbl.height = 36
+        genreLbl.font = "font:SmallBoldSystemFont"
+        genreLbl.color = "0x80DEEAFF"
+
+        playingLbl = CreateObject("roSGNode", "Label")
+        playingLbl.translation = [36, 160]
+        playingLbl.width = 496
+        playingLbl.height = 30
+        playingLbl.font = "font:SmallestBoldSystemFont"
+        playingLbl.color = "0xFFD54FFF"
+        playingLbl.text = ""
+
+        cardGroup.appendChild(border)
+        cardGroup.appendChild(bg)
+        cardGroup.appendChild(accent)
+        cardGroup.appendChild(titleLbl)
+        cardGroup.appendChild(genreLbl)
+        cardGroup.appendChild(playingLbl)
+        m.stationsGridGroup.appendChild(cardGroup)
+
+        m.stationCards.Push({
+            group: cardGroup,
+            border: border,
+            bg: bg,
+            accent: accent,
+            titleLbl: titleLbl,
+            genreLbl: genreLbl,
+            playingLbl: playingLbl
+        })
+    end for
+end sub
+
+sub openStationsBrowser()
+    m.isStationsOpen = true
+    m.toastGroup.visible = false
+    m.stationsOverlay.visible = true
+
+    if m.filteredStations.Count() > 0
+        m.stationsFocusArea = "grid"
+    else
+        m.stationsFocusArea = "search"
+        m.stationsTopFocusIdx = 0
+    end if
+
+    renderStationsGrid()
+end sub
+
+sub closeStationsBrowser()
+    m.isStationsOpen = false
+    m.stationsOverlay.visible = false
+    m.clockGroup.visible = true
+    m.top.setFocus(true)
+end sub
+
+sub renderStationsGrid()
+    total = m.filteredStations.Count()
+
+    if m.stationsSearchQuery <> ""
+        m.stationsHeaderTitle.text = "SEARCH: " + UCase(m.stationsSearchQuery) + "  (" + total.ToStr() + ")"
+        m.searchBoxLabel.text = "Search: " + m.stationsSearchQuery + "   (Press OK to Change)"
+        m.searchBoxLabel.color = "0xFFFFFFFF"
+    else
+        m.stationsHeaderTitle.text = "FAMILY RADIO  •  " + total.ToStr() + " STATIONS"
+        m.searchBoxLabel.text = "Search 100 Stations (Press OK to Type)..."
+        m.searchBoxLabel.color = "0xB0BEC5FF"
+    end if
+
+    ' Update Now Playing header
+    m.stationsNowPlayingLabel.text = "Now Playing: " + m.radioStatusLabel.text
+
+    ' Top Search Row Focus Highlights
+    m.searchBoxBorder.color = "0x28354AFF"
+    m.searchBoxBg.color = "0x111A2BFF"
+    m.showAllBtnBorder.color = "0x28354AFF"
+    m.showAllBtnBg.color = "0x111A2BFF"
+    m.closeStationsBtnBorder.color = "0x28354AFF"
+    m.closeStationsBtnBg.color = "0x111A2BFF"
+
+    if m.stationsFocusArea = "search"
+        if m.stationsTopFocusIdx = 0
+            m.searchBoxBorder.color = "0xFFD54FFF"
+            m.searchBoxBg.color = "0x1B2840FF"
+        else if m.stationsTopFocusIdx = 1
+            m.showAllBtnBorder.color = "0xFFD54FFF"
+            m.showAllBtnBg.color = "0x1B2840FF"
+        else
+            m.closeStationsBtnBorder.color = "0xFFD54FFF"
+            m.closeStationsBtnBg.color = "0x1B2840FF"
+        end if
+    end if
+
+    if total = 0
+        m.stationsEmptyLabel.visible = true
+        for i = 0 to 8
+            m.stationCards[i].group.visible = false
+        end for
+        m.stationsPageLabel.text = "0 Stations Found   •   Move Right to 'Show All 100' or Press [Back] to Return to Photos"
+        return
+    end if
+
+    m.stationsEmptyLabel.visible = false
+
+    if m.stationsSelectedIdx < 0 then m.stationsSelectedIdx = 0
+    if m.stationsSelectedIdx >= total then m.stationsSelectedIdx = total - 1
+
+    pageStart = Int(m.stationsSelectedIdx / 9) * 9
+    pageEnd = pageStart + 8
+    if pageEnd >= total then pageEnd = total - 1
+
+    for i = 0 to 8
+        idx = pageStart + i
+        card = m.stationCards[i]
+        if idx < total
+            st = m.filteredStations[idx]
+            card.group.visible = true
+            card.titleLbl.text = (idx + 1).ToStr() + ". " + st.name
+            card.genreLbl.text = st.genre
+            card.accent.color = st.color
+
+            if st.url = m.activePlayingUrl
+                card.playingLbl.text = "NOW PLAYING"
+            else
+                card.playingLbl.text = ""
+            end if
+
+            if m.stationsFocusArea = "grid" and idx = m.stationsSelectedIdx
+                card.border.color = "0xFFD54FFF"
+                card.bg.color = "0x1A263EFF"
+            else
+                card.border.color = "0x28354AFF"
+                card.bg.color = "0x101726FF"
+            end if
+        else
+            card.group.visible = false
+        end if
+    end for
+
+    m.stationsPageLabel.text = "Showing " + (pageStart + 1).ToStr() + " - " + (pageEnd + 1).ToStr() + " of " + total.ToStr() + "   •   [UP] at Top Row = Search   •   [Rew/FF] Page   •   [OK] Play   •   [Back] Photos"
+end sub
+
+function handleStationsKeyEvent(key as String) as Boolean
+    total = m.filteredStations.Count()
+
+    if key = "back" or key = "options"
+        closeStationsBrowser()
+        return true
+    end if
+
+    if m.stationsFocusArea = "search"
+        if key = "left"
+            if m.stationsTopFocusIdx > 0
+                m.stationsTopFocusIdx = m.stationsTopFocusIdx - 1
+            end if
+            renderStationsGrid()
+            return true
+        else if key = "right"
+            if m.stationsTopFocusIdx < 2
+                m.stationsTopFocusIdx = m.stationsTopFocusIdx + 1
+            end if
+            renderStationsGrid()
+            return true
+        else if key = "down"
+            if total > 0
+                m.stationsFocusArea = "grid"
+                renderStationsGrid()
+            end if
+            return true
+        else if key = "OK"
+            if m.stationsTopFocusIdx = 0
+                openStationSearchDialog()
+            else if m.stationsTopFocusIdx = 1
+                filterStationsByQuery("")
+                if m.filteredStations.Count() > 0
+                    m.stationsFocusArea = "grid"
+                end if
+                renderStationsGrid()
+            else
+                closeStationsBrowser()
+            end if
+            return true
+        end if
+        return true
+    end if
+
+    ' Grid Navigation (3 columns x 3 rows per page)
+    if key = "left"
+        if m.stationsSelectedIdx > 0
+            m.stationsSelectedIdx = m.stationsSelectedIdx - 1
+            renderStationsGrid()
+        end if
+        return true
+    else if key = "right"
+        if m.stationsSelectedIdx < total - 1
+            m.stationsSelectedIdx = m.stationsSelectedIdx + 1
+            renderStationsGrid()
+        end if
+        return true
+    else if key = "up"
+        idxInPage = m.stationsSelectedIdx mod 9
+        if idxInPage < 3
+            ' Top row of current page -> jump straight up to Search Box!
+            m.stationsFocusArea = "search"
+            m.stationsTopFocusIdx = 0
+            renderStationsGrid()
+        else
+            m.stationsSelectedIdx = m.stationsSelectedIdx - 3
+            renderStationsGrid()
+        end if
+        return true
+    else if key = "down"
+        if m.stationsSelectedIdx + 3 < total
+            m.stationsSelectedIdx = m.stationsSelectedIdx + 3
+        else if m.stationsSelectedIdx < total - 1
+            m.stationsSelectedIdx = total - 1
+        end if
+        renderStationsGrid()
+        return true
+    else if key = "rewind"
+        m.stationsSelectedIdx = m.stationsSelectedIdx - 9
+        if m.stationsSelectedIdx < 0 then m.stationsSelectedIdx = 0
+        renderStationsGrid()
+        return true
+    else if key = "fastforward"
+        m.stationsSelectedIdx = m.stationsSelectedIdx + 9
+        if m.stationsSelectedIdx >= total then m.stationsSelectedIdx = total - 1
+        renderStationsGrid()
+        return true
+    else if key = "OK"
+        if total > 0
+            playStationFromCatalog(m.filteredStations[m.stationsSelectedIdx])
+            renderStationsGrid()
+        end if
+        return true
+    end if
+
+    return true
+end function
+
+sub playStationFromCatalog(st as Object)
+    streamFormat = "mp3"
+    if st.DoesExist("format") and st.format <> ""
+        streamFormat = st.format
+    end if
+
+    content = CreateObject("roSGNode", "ContentNode")
+    content.url = st.url
+    content.title = st.name
+    content.streamFormat = streamFormat
+
+    m.currentSongTitle = ""
+    m.activePlayingUrl = st.url
+    m.currentStationList = [st]
+    m.currentStationIndex = 0
+
+    m.radioPlayer.control = "stop"
+    m.radioPlayer.content = content
+    m.radioPlayer.mute = m.isMuted
+    m.radioPlayer.control = "play"
+
+    m.radioHeaderLabel.text = "100-STATION BROWSER  •  " + UCase(st.genre)
+    m.radioStatusLabel.text = st.name
+    m.nowPlayingLabel.text = "Live Broadcast"
+end sub
+
+sub openStationSearchDialog()
+    dlg = CreateObject("roSGNode", "KeyboardDialog")
+    dlg.title = "Search 100 Radio Stations"
+    dlg.message = ["Type a station name or music style (example: K-LOVE, Sinatra, Jazz, News, Christmas)"]
+    dlg.text = m.stationsSearchQuery
+    dlg.buttons = ["Search", "Show All 100", "Cancel"]
+    dlg.ObserveField("buttonSelected", "onSearchDialogButton")
+    m.searchDialog = dlg
+    m.top.getScene().dialog = dlg
+end sub
+
+sub onSearchDialogButton()
+    if m.searchDialog = invalid then return
+    btn = m.searchDialog.buttonSelected
+    query = m.searchDialog.text
+    m.searchDialog.close = true
+    m.searchDialog = invalid
+
+    if btn = 0
+        filterStationsByQuery(query)
+        if m.filteredStations.Count() > 0
+            m.stationsFocusArea = "grid"
+        end if
+        renderStationsGrid()
+    else if btn = 1
+        filterStationsByQuery("")
+        m.stationsFocusArea = "grid"
+        renderStationsGrid()
+    end if
+end sub
+
+sub filterStationsByQuery(query as String)
+    cleanQ = LCase(query.Trim())
+    m.stationsSearchQuery = query.Trim()
+    m.stationsSelectedIdx = 0
+
+    if cleanQ = ""
+        m.filteredStations = m.allStations
+        return
+    end if
+
+    matches = []
+    for each st in m.allStations
+        haystack = LCase(st.name + " " + st.genre)
+        if Instr(1, haystack, cleanQ) > 0
+            matches.Push(st)
+        end if
+    end for
+    m.filteredStations = matches
+end sub

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <component name="MainScene" extends="Scene">
+    <script type="text/brightscript" uri="pkg:/components/StationCatalog.brs" />
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
 
     <children>
@@ -268,7 +269,137 @@
                 font="font:SmallBoldSystemFont"
                 color="0xEEEEEEFF"
                 horizAlign="center"
-                text="[Left/Right] Photo  |  [Rew/FF] ±10  |  [Up/Down] Genre (1-10)  |  [*] Station  |  [OK] Shuffle  |  [Play] Pause  |  [Replay] Mute" />
+                text="[Left/Right] Photo  |  [Rew/FF] ±10  |  [Up/Down] Genre  |  [*] 100 Stations &amp; Search  |  [OK] Shuffle  |  [Play] Pause  |  [Replay] Mute" />
+        </Group>
+
+        <!-- Pandora-for-TV 100-Station Browser & Search Overlay (Open with * Star) -->
+        <Group id="stationsOverlay" visible="false">
+            <Rectangle
+                width="1920"
+                height="1080"
+                color="0x090D16F7" />
+
+            <!-- Top Header Bar -->
+            <Label
+                id="stationsHeaderTitle"
+                translation="[80, 34]"
+                width="820"
+                height="56"
+                font="font:LargeBoldSystemFont"
+                color="0xFFD54FFF"
+                horizAlign="left"
+                text="FAMILY RADIO  •  100 STATIONS" />
+            <Label
+                id="stationsNowPlayingLabel"
+                translation="[900, 42]"
+                width="940"
+                height="46"
+                font="font:MediumBoldSystemFont"
+                color="0xFFFFFFFF"
+                horizAlign="right"
+                text="Now Playing: 100.3 K-LOVE Los Angeles" />
+
+            <!-- Search Row (Press UP from Top Station Row to Focus Search!) -->
+            <Group id="searchBoxGroup" translation="[80, 114]">
+                <Rectangle
+                    id="searchBoxBorder"
+                    width="1060"
+                    height="76"
+                    color="0x28354AFF" />
+                <Rectangle
+                    id="searchBoxBg"
+                    translation="[4, 4]"
+                    width="1052"
+                    height="68"
+                    color="0x111A2BFF" />
+                <Label
+                    id="searchBoxLabel"
+                    translation="[28, 16]"
+                    width="1000"
+                    height="44"
+                    font="font:MediumBoldSystemFont"
+                    color="0xB0BEC5FF"
+                    horizAlign="left"
+                    text="Search 100 Stations (Press OK to Type)..." />
+            </Group>
+
+            <Group id="showAllBtnGroup" translation="[1170, 114]">
+                <Rectangle
+                    id="showAllBtnBorder"
+                    width="360"
+                    height="76"
+                    color="0x28354AFF" />
+                <Rectangle
+                    id="showAllBtnBg"
+                    translation="[4, 4]"
+                    width="352"
+                    height="68"
+                    color="0x111A2BFF" />
+                <Label
+                    id="showAllBtnLabel"
+                    translation="[16, 16]"
+                    width="320"
+                    height="44"
+                    font="font:MediumBoldSystemFont"
+                    color="0xFFFFFFFF"
+                    horizAlign="center"
+                    text="Show All 100" />
+            </Group>
+
+            <Group id="closeStationsBtnGroup" translation="[1560, 114]">
+                <Rectangle
+                    id="closeStationsBtnBorder"
+                    width="280"
+                    height="76"
+                    color="0x28354AFF" />
+                <Rectangle
+                    id="closeStationsBtnBg"
+                    translation="[4, 4]"
+                    width="272"
+                    height="68"
+                    color="0x111A2BFF" />
+                <Label
+                    id="closeStationsBtnLabel"
+                    translation="[16, 16]"
+                    width="240"
+                    height="44"
+                    font="font:MediumBoldSystemFont"
+                    color="0x80DEEAFF"
+                    horizAlign="center"
+                    text="Back to Photos" />
+            </Group>
+
+            <!-- 3x3 Pandora-Style Station Card Grid (Populated in MainScene.brs) -->
+            <Group id="stationsGridGroup" />
+
+            <!-- Empty Search Results Message -->
+            <Label
+                id="stationsEmptyLabel"
+                translation="[160, 440]"
+                width="1600"
+                height="120"
+                font="font:LargeBoldSystemFont"
+                color="0xFFD54FFF"
+                horizAlign="center"
+                wrap="true"
+                visible="false"
+                text="No stations matched that search. Move right and press OK on 'Show All 100'!" />
+
+            <!-- Bottom Navigation & Page Guide -->
+            <Rectangle
+                translation="[80, 932]"
+                width="1760"
+                height="2"
+                color="0xFFFFFF26" />
+            <Label
+                id="stationsPageLabel"
+                translation="[80, 954]"
+                width="1760"
+                height="48"
+                font="font:MediumBoldSystemFont"
+                color="0xEEEEEEFF"
+                horizAlign="center"
+                text="Showing 1 - 9 of 100   •   Press [UP] at Top Row to Search   •   [Rew/FF] Next Page   •   [Back] Return to Photos" />
         </Group>
 
         <!-- Slideshow Auto-Advance Timer (12 Seconds) -->
