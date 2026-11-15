@@ -608,7 +608,7 @@ sub buildStationGridUI()
         numBadge = addNode(cardGroup, "Label", { translation: [34, 18], width: 496, height: 28, font: "font:SmallestBoldSystemFont", color: "0x80DEEAFF" })
         titleLbl = addNode(cardGroup, "Label", { translation: [34, 48], width: 496, height: 92, font: "font:MediumBoldSystemFont", color: "0xFFFFFFFF", wrap: true })
         playingLbl = addNode(cardGroup, "Label", { translation: [34, 154], width: 496, height: 30, font: "font:SmallestBoldSystemFont", color: "0x00E676FF", text: "" })
-        m.stationCards.Push({ group: cardGroup, border: border, bg: bg, accent: accent, numBadge: numBadge, titleLbl: titleLbl, playingLbl: playingLbl, pos: [cx, ry] })
+        m.stationCards.Push({ group: cardGroup, border: border, bg: bg, accent: accent, numBadge: numBadge, titleLbl: titleLbl, playingLbl: playingLbl, cardCoords: [cx, ry] })
     end for
 end sub
 
@@ -725,11 +725,11 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
                 card.border.color = "0xFFD54FFF"
                 card.bg.color = "0x1A2942FF"
                 if animateFocus
-                    curPos = m.gridFocusRing.translation
-                    m.focusMoveInterp.keyValue = [[curPos[0], curPos[1]], card.pos]
+                    curCoords = m.gridFocusRing.translation
+                    m.focusMoveInterp.keyValue = [[curCoords[0], curCoords[1]], card.cardCoords]
                     m.focusMoveAnim.control = "start"
                 else
-                    m.gridFocusRing.translation = card.pos
+                    m.gridFocusRing.translation = card.cardCoords
                 end if
             else
                 card.border.color = "0x243248FF"
