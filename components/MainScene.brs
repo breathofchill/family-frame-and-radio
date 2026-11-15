@@ -11,20 +11,29 @@ sub init()
     m.toastTitleLabel = m.top.findNode("toastTitleLabel")
     m.toastMessageLabel = m.top.findNode("toastMessageLabel")
     m.toastSubLabel = m.top.findNode("toastSubLabel")
+    m.clockGroup = m.top.findNode("clockGroup")
+    m.clockTimeLabel = m.top.findNode("clockTimeLabel")
+    m.clockDateLabel = m.top.findNode("clockDateLabel")
     m.photoHeaderLabel = m.top.findNode("photoHeaderLabel")
     m.photoCounterLabel = m.top.findNode("photoCounterLabel")
+    m.photoSubLabel = m.top.findNode("photoSubLabel")
     m.radioHeaderLabel = m.top.findNode("radioHeaderLabel")
     m.radioStatusLabel = m.top.findNode("radioStatusLabel")
+    m.nowPlayingLabel = m.top.findNode("nowPlayingLabel")
     m.slideshowTimer = m.top.findNode("slideshowTimer")
     m.toastTimer = m.top.findNode("toastTimer")
+    m.clockTimer = m.top.findNode("clockTimer")
     m.radioPlayer = m.top.findNode("radioPlayer")
 
     ' Slideshow State (Engineered for 200+ to 1,000+ Photos)
+    m.orderedPhotos = []
     m.photos = []
     m.currentPhotoIndex = 0
     m.activePoster = "A"
     m.isSlideshowPaused = false
+    m.isShuffleMode = false
     m.pendingPoster = ""
+    m.currentSongTitle = ""
 
     ' =========================================================================
     ' 9 MAIN GRANDPARENT-FRIENDLY RADIO GENRES
@@ -147,11 +156,17 @@ sub init()
     ' Set up Timers, Texture Cleanup Observers, and Audio Observers
     m.slideshowTimer.ObserveField("fire", "onSlideshowTimerFire")
     m.toastTimer.ObserveField("fire", "onToastTimerFire")
+    m.clockTimer.ObserveField("fire", "updateLivingRoomClock")
     m.radioPlayer.ObserveField("state", "onAudioStateChange")
+    m.radioPlayer.ObserveField("timedMetaData", "onTimedMetaData")
     m.fadeAtoB.ObserveField("state", "onFadeAtoBState")
     m.fadeBtoA.ObserveField("state", "onFadeBtoAState")
     m.posterA.ObserveField("loadStatus", "onPosterALoadStatus")
     m.posterB.ObserveField("loadStatus", "onPosterBLoadStatus")
+
+    ' Start Living-Room Clock & Date immediately
+    updateLivingRoomClock()
+    m.clockTimer.control = "start"
 
     ' Discover all 200+ family photos in pkg:/images/
     discoverPhotos()
@@ -161,10 +176,49 @@ sub init()
 end sub
 
 ' =============================================================================
+' BIG, FRIENDLY LIVING-ROOM CLOCK & DATE
+' =============================================================================
+
+sub updateLivingRoomClock()
+    dt = CreateObject("roDateTime")
+    dt.ToLocalTime()
+
+    hour24 = dt.GetHours()
+    minute = dt.GetMinutes()
+
+    ampm = "AM"
+    if hour24 >= 12
+        ampm = "PM"
+    end if
+
+    hour12 = hour24 mod 12
+    if hour12 = 0
+        hour12 = 12
+    end if
+
+    minStr = minute.ToStr()
+    if minute < 10
+        minStr = "0" + minStr
+    end if
+
+    m.clockTimeLabel.text = hour12.ToStr() + ":" + minStr + " " + ampm
+
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    monthIdx = dt.GetMonth() - 1
+    monthName = ""
+    if monthIdx >= 0 and monthIdx < months.Count()
+        monthName = months[monthIdx]
+    end if
+
+    m.clockDateLabel.text = dt.GetWeekday() + ", " + monthName + " " + dt.GetDayOfMonth().ToStr()
+end sub
+
+' =============================================================================
 ' 200+ PHOTO SLIDESHOW ENGINE WITH GPU TEXTURE MEMORY RECYCLING
 ' =============================================================================
 
 sub discoverPhotos()
+    m.orderedPhotos = []
     m.photos = []
     rawFiles = ListDir("pkg:/images/")
 
@@ -188,7 +242,9 @@ sub discoverPhotos()
         sortableList.SortBy("sortKey")
 
         for each entry in sortableList
-            m.photos.Push("pkg:/images/" + entry.name)
+            uri = "pkg:/images/" + entry.name
+            m.orderedPhotos.Push(uri)
+            m.photos.Push(uri)
         end for
     end if
 
@@ -356,7 +412,7 @@ sub toggleSlideshowPause()
     m.isSlideshowPaused = not m.isSlideshowPaused
     if m.isSlideshowPaused
         m.slideshowTimer.control = "stop"
-        showToast("PHOTO SLIDESHOW PAUSED", "Staying on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Press [OK] or [Play] Anytime to Resume Slideshow")
+        showToast("PHOTO SLIDESHOW PAUSED", "Staying on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Press [Play] Anytime to Resume Slideshow")
     else
         if m.photos.Count() > 1
             m.slideshowTimer.control = "start"
@@ -366,20 +422,76 @@ sub toggleSlideshowPause()
     updatePhotoCounterHUD()
 end sub
 
+sub toggleShuffleMode()
+    if m.orderedPhotos.Count() <= 1 then return
+
+    currentUri = m.photos[m.currentPhotoIndex]
+    m.isShuffleMode = not m.isShuffleMode
+
+    if m.isShuffleMode
+        ' Build a Fisher-Yates shuffled copy, keeping the current photo first so the screen doesn't jump
+        pool = []
+        for each uri in m.orderedPhotos
+            if uri <> currentUri
+                pool.Push(uri)
+            end if
+        end for
+
+        ' Fisher-Yates shuffle
+        n = pool.Count()
+        for i = n - 1 to 1 step -1
+            j = Rnd(i + 1) - 1
+            tmp = pool[i]
+            pool[i] = pool[j]
+            pool[j] = tmp
+        end for
+
+        m.photos = [currentUri]
+        for each uri in pool
+            m.photos.Push(uri)
+        end for
+        m.currentPhotoIndex = 0
+        showToast("SHUFFLE MODE ON", "Showing Family Photos in Random Order", "Press [OK] Anytime to Return to Storybook Order")
+    else
+        ' Restore natural Storybook chronological order and keep position on current photo
+        m.photos = []
+        foundIdx = 0
+        for i = 0 to m.orderedPhotos.Count() - 1
+            uri = m.orderedPhotos[i]
+            m.photos.Push(uri)
+            if uri = currentUri
+                foundIdx = i
+            end if
+        end for
+        m.currentPhotoIndex = foundIdx
+        showToast("STORYBOOK ORDER ON", "Showing Family Photos in Numerical Order", "Press [OK] Anytime to Shuffle Photos")
+    end if
+
+    updatePhotoCounterHUD()
+end sub
+
 sub updatePhotoCounterHUD()
     total = m.photos.Count()
     if total = 0
         m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM"
         m.photoCounterLabel.text = "No Photos Found"
+        m.photoSubLabel.text = ""
         return
+    end if
+
+    modeText = "STORYBOOK ORDER"
+    if m.isShuffleMode
+        modeText = "SHUFFLE MODE"
     end if
 
     if m.isSlideshowPaused
         m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM  •  PAUSED"
         m.photoCounterLabel.color = "0xFFD54FFF"
+        m.photoSubLabel.text = modeText + "  •  Press [Play] to Resume"
     else
-        m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM"
+        m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM  •  " + modeText
         m.photoCounterLabel.color = "0xFFFFFFFF"
+        m.photoSubLabel.text = "Auto-Advance: Every 12s"
     end if
 
     m.photoCounterLabel.text = "Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + total.ToStr()
@@ -523,6 +635,44 @@ sub toggleMute()
     updateRadioHUD()
 end sub
 
+sub onTimedMetaData()
+    meta = m.radioPlayer.timedMetaData
+    if type(meta) <> "roAssociativeArray" then return
+
+    songTitle = ""
+    artistName = ""
+
+    if meta.DoesExist("title") and meta.title <> invalid
+        songTitle = meta.title.ToStr().Trim()
+    else if meta.DoesExist("StreamTitle") and meta.StreamTitle <> invalid
+        songTitle = meta.StreamTitle.ToStr().Trim()
+    else if meta.DoesExist("TIT2") and meta.TIT2 <> invalid
+        songTitle = meta.TIT2.ToStr().Trim()
+    end if
+
+    if meta.DoesExist("artist") and meta.artist <> invalid
+        artistName = meta.artist.ToStr().Trim()
+    else if meta.DoesExist("TPE1") and meta.TPE1 <> invalid
+        artistName = meta.TPE1.ToStr().Trim()
+    end if
+
+    fullText = ""
+    if artistName <> "" and songTitle <> ""
+        fullText = artistName + " — " + songTitle
+    else if songTitle <> ""
+        fullText = songTitle
+    end if
+
+    ' Ignore empty or placeholder metadata
+    if fullText <> "" and fullText <> "-" and fullText <> " - "
+        m.currentSongTitle = fullText
+    else
+        m.currentSongTitle = ""
+    end if
+
+    updateRadioHUD()
+end sub
+
 sub updateRadioHUD()
     vibe = m.vibes[m.currentVibeIndex]
     genreNum = (m.currentVibeIndex + 1).ToStr() + " OF " + m.vibes.Count().ToStr()
@@ -541,6 +691,12 @@ sub updateRadioHUD()
     end if
 
     m.radioStatusLabel.text = statePrefix + stationName
+
+    if m.currentSongTitle <> ""
+        m.nowPlayingLabel.text = "Now Playing: " + m.currentSongTitle
+    else
+        m.nowPlayingLabel.text = "Live Broadcast"
+    end if
 end sub
 
 ' =============================================================================
@@ -555,6 +711,7 @@ sub showToast(title as String, message as String, subText = "" as String)
     else
         m.toastSubLabel.text = "Press [UP / DOWN] to Change Genre   •   Press [ * ] for Next Station in This Genre"
     end if
+    m.clockGroup.visible = false
     m.toastGroup.visible = true
     m.toastTimer.control = "stop"
     m.toastTimer.control = "start"
@@ -562,6 +719,7 @@ end sub
 
 sub onToastTimerFire()
     m.toastGroup.visible = false
+    m.clockGroup.visible = true
 end sub
 
 ' =============================================================================
@@ -601,7 +759,7 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         end if
         return true
 
-    ' Up / Down: Switch between the 9 Main Radio Genres
+    ' Up / Down: Switch between the 10 Main Radio Genres
     else if key = "up"
         m.currentVibeIndex = m.currentVibeIndex - 1
         if m.currentVibeIndex < 0
@@ -622,8 +780,13 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         nextStationInGenre()
         return true
 
-    ' OK or Play: Pause / Resume the Photo Slideshow
-    else if key = "OK" or key = "play"
+    ' OK: Toggle Shuffle vs. Storybook Order
+    else if key = "OK"
+        toggleShuffleMode()
+        return true
+
+    ' Play: Pause / Resume the Photo Slideshow
+    else if key = "play"
         toggleSlideshowPause()
         return true
 
