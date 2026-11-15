@@ -3,6 +3,11 @@ sub init()
 end sub
 
 sub fetchStations()
+    if m.top.artworkQuery <> ""
+        fetchArtwork()
+        return
+    end if
+
     m.top.status = "loading"
     combinedStations = []
     seenUrls = {}
@@ -11,19 +16,33 @@ sub fetchStations()
         for each item in curated
             if type(item) = "roAssociativeArray" and item.DoesExist("url") and item.url <> ""
                 fmt = "mp3"
-                if item.DoesExist("format") and item.format <> "" then fmt = item.format
-                combinedStations.Push({ name: item.name, url: item.url, format: fmt })
+                if item.DoesExist("format") and item.format <> ""
+                    fmt = item.format
+                end if
+                combinedStations.Push({
+                    name: item.name,
+                    url: item.url,
+                    format: fmt
+                })
                 seenUrls[item.url] = true
             end if
         end for
     end if
 
-    hosts = ["https://de1.api.radio-browser.info", "https://nl1.api.radio-browser.info", "https://at1.api.radio-browser.info"]
+    hosts = [
+        "https://de1.api.radio-browser.info",
+        "https://nl1.api.radio-browser.info",
+        "https://at1.api.radio-browser.info"
+    ]
     searchName = m.top.searchName
     searchTag = m.top.searchTag
-    if searchTag = "" then searchTag = "oldies"
+    if searchTag = ""
+        searchTag = "oldies"
+    end if
     queries = []
-    if searchName <> "" then queries.Push("/json/stations/search?name=" + UrlEncode(searchName) + "&hidebroken=true&order=votes&reverse=true&limit=5")
+    if searchName <> ""
+        queries.Push("/json/stations/search?name=" + UrlEncode(searchName) + "&hidebroken=true&order=votes&reverse=true&limit=5")
+    end if
     queries.Push("/json/stations/search?tag=" + UrlEncode(searchTag) + "&codec=MP3&hidebroken=true&order=votes&reverse=true&limit=8")
 
     for each queryPath in queries
@@ -41,7 +60,9 @@ sub fetchStations()
                                 streamUrl = item.url
                             end if
                             stationName = "Live Radio"
-                            if item.DoesExist("name") and item.name <> invalid and item.name.Trim() <> "" then stationName = item.name.Trim()
+                            if item.DoesExist("name") and item.name <> invalid and item.name.Trim() <> ""
+                                stationName = item.name.Trim()
+                            end if
                             codec = "mp3"
                             if item.DoesExist("codec") and item.codec <> invalid
                                 lc = LCase(item.codec)
@@ -53,7 +74,11 @@ sub fetchStations()
                             end if
                             if streamUrl <> "" and not seenUrls.DoesExist(streamUrl)
                                 seenUrls[streamUrl] = true
-                                combinedStations.Push({ name: stationName, url: streamUrl, format: codec })
+                                combinedStations.Push({
+                                    name: stationName,
+                                    url: streamUrl,
+                                    format: codec
+                                })
                             end if
                         end if
                     end for
@@ -74,16 +99,20 @@ end sub
 sub fetchArtwork()
     q = cleanArtworkQuery(m.top.artworkQuery)
     if q = "" then return
-    for each entity in ["song", "album"]
+    entities = ["song", "album"]
+    for each entity in entities
         url = "https://itunes.apple.com/search?term=" + UrlEncode(q) + "&media=music&entity=" + entity + "&limit=1"
         body = httpGet(url, 4500)
         if body <> ""
             json = ParseJson(body)
-            if type(json) = "roAssociativeArray" and type(json.results) = "roArray" and json.results.Count() > 0
+            if type(json) = "roAssociativeArray" and json.DoesExist("results") and type(json.results) = "roArray" and json.results.Count() > 0
                 first = json.results[0]
                 if type(first) = "roAssociativeArray" and first.DoesExist("artworkUrl100") and first.artworkUrl100 <> invalid
-                    m.top.artworkUrl = first.artworkUrl100.ToStr().Replace("100x100bb", "400x400bb")
-                    return
+                    rawArt = first.artworkUrl100
+                    if type(rawArt) = "roString" or type(rawArt) = "String"
+                        m.top.artworkUrl = rawArt.Replace("100x100bb", "400x400bb")
+                        return
+                    end if
                 end if
             end if
         end if
@@ -101,7 +130,9 @@ function httpGet(url as String, timeoutMs as Integer) as String
     http.AddHeader("Accept", "application/json")
     if http.AsyncGetToString()
         msg = wait(timeoutMs, port)
-        if type(msg) = "roUrlEvent" and msg.GetResponseCode() = 200 then return msg.GetString()
+        if type(msg) = "roUrlEvent" and msg.GetResponseCode() = 200
+            return msg.GetString()
+        end if
         http.AsyncCancel()
     end if
     return ""
@@ -109,11 +140,24 @@ end function
 
 function cleanArtworkQuery(raw as String) as String
     if raw = invalid then return ""
-    s = raw.Replace("—", " ").Replace("-", " ").Replace("|", " ").Replace("(", " ").Replace(")", " ").Replace("[", " ").Replace("]", " ").Trim()
-    if Len(s) > 65 then s = Left(s, 65)
-    return s
+    out = ""
+    for i = 1 to Len(raw)
+        ch = Mid(raw, i, 1)
+        c = Asc(ch)
+        if (c >= 48 and c <= 57) or (c >= 65 and c <= 90) or (c >= 97 and c <= 122) or c = 32
+            out = out + ch
+        else
+            out = out + " "
+        end if
+    end for
+    out = out.Trim()
+    if Len(out) > 60
+        out = Left(out, 60)
+    end if
+    return out
 end function
 
 function UrlEncode(str as String) as String
-    return CreateObject("roUrlTransfer").Escape(str)
+    xfer = CreateObject("roUrlTransfer")
+    return xfer.Escape(str)
 end function

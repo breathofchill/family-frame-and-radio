@@ -1,8 +1,64 @@
 sub init()
     m.top.setFocus(true)
-    for each id in ["posterA","posterB","fadeAtoB","fadeBtoA","emptyStateGroup","toastGroup","toastTitleLabel","toastMessageLabel","toastSubLabel","toastSlideAnim","clockGroup","clockTimeLabel","clockDateLabel","photoHeaderLabel","photoCounterLabel","photoSubLabel","radioHeaderLabel","radioStatusLabel","nowPlayingLabel","hudAlbumGroup","hudAlbumPoster","slideshowTimer","toastTimer","clockTimer","radioPlayer","stationsOverlay","stationsContentGroup","stationsHeaderTitle","stationsNowPlayingLabel","stationsSongLabel","stationsGenreLabel","heroAlbumGroup","heroAlbumPoster","heroBadgeLabel","searchBoxGroup","searchBoxBorder","searchBoxBg","micBadgeBg","searchBoxLabel","voiceSearchBox","showAllBtnGroup","showAllBtnBorder","showAllBtnBg","stationsGridGroup","gridFocusRing","stationsEmptyLabel","stationsPageLabel","overlayOpenAnim","overlayCloseAnim","focusMoveAnim","focusMoveInterp","pageSlideAnim","pageSlideInterp","searchFocusAnim","searchScaleInterp","artPopAnim","eqPulseAnim"]
-        m[id] = m.top.findNode(id)
-    end for
+
+    m.posterA = m.top.findNode("posterA")
+    m.posterB = m.top.findNode("posterB")
+    m.fadeAtoB = m.top.findNode("fadeAtoB")
+    m.fadeBtoA = m.top.findNode("fadeBtoA")
+    m.emptyStateGroup = m.top.findNode("emptyStateGroup")
+    m.toastGroup = m.top.findNode("toastGroup")
+    m.toastTitleLabel = m.top.findNode("toastTitleLabel")
+    m.toastMessageLabel = m.top.findNode("toastMessageLabel")
+    m.toastSubLabel = m.top.findNode("toastSubLabel")
+    m.toastSlideAnim = m.top.findNode("toastSlideAnim")
+    m.clockGroup = m.top.findNode("clockGroup")
+    m.clockTimeLabel = m.top.findNode("clockTimeLabel")
+    m.clockDateLabel = m.top.findNode("clockDateLabel")
+    m.photoHeaderLabel = m.top.findNode("photoHeaderLabel")
+    m.photoCounterLabel = m.top.findNode("photoCounterLabel")
+    m.photoSubLabel = m.top.findNode("photoSubLabel")
+    m.radioHeaderLabel = m.top.findNode("radioHeaderLabel")
+    m.radioStatusLabel = m.top.findNode("radioStatusLabel")
+    m.nowPlayingLabel = m.top.findNode("nowPlayingLabel")
+    m.hudAlbumGroup = m.top.findNode("hudAlbumGroup")
+    m.hudAlbumPoster = m.top.findNode("hudAlbumPoster")
+    m.slideshowTimer = m.top.findNode("slideshowTimer")
+    m.toastTimer = m.top.findNode("toastTimer")
+    m.clockTimer = m.top.findNode("clockTimer")
+    m.radioPlayer = m.top.findNode("radioPlayer")
+
+    m.stationsOverlay = m.top.findNode("stationsOverlay")
+    m.stationsContentGroup = m.top.findNode("stationsContentGroup")
+    m.stationsHeaderTitle = m.top.findNode("stationsHeaderTitle")
+    m.stationsNowPlayingLabel = m.top.findNode("stationsNowPlayingLabel")
+    m.stationsSongLabel = m.top.findNode("stationsSongLabel")
+    m.stationsGenreLabel = m.top.findNode("stationsGenreLabel")
+    m.heroAlbumGroup = m.top.findNode("heroAlbumGroup")
+    m.heroAlbumPoster = m.top.findNode("heroAlbumPoster")
+    m.heroBadgeLabel = m.top.findNode("heroBadgeLabel")
+    m.searchBoxGroup = m.top.findNode("searchBoxGroup")
+    m.searchBoxBorder = m.top.findNode("searchBoxBorder")
+    m.searchBoxBg = m.top.findNode("searchBoxBg")
+    m.micBadgeBg = m.top.findNode("micBadgeBg")
+    m.searchBoxLabel = m.top.findNode("searchBoxLabel")
+    m.showAllBtnGroup = m.top.findNode("showAllBtnGroup")
+    m.showAllBtnBorder = m.top.findNode("showAllBtnBorder")
+    m.showAllBtnBg = m.top.findNode("showAllBtnBg")
+    m.stationsGridGroup = m.top.findNode("stationsGridGroup")
+    m.gridFocusRing = m.top.findNode("gridFocusRing")
+    m.stationsEmptyLabel = m.top.findNode("stationsEmptyLabel")
+    m.stationsPageLabel = m.top.findNode("stationsPageLabel")
+
+    m.overlayOpenAnim = m.top.findNode("overlayOpenAnim")
+    m.overlayCloseAnim = m.top.findNode("overlayCloseAnim")
+    m.focusMoveAnim = m.top.findNode("focusMoveAnim")
+    m.focusMoveInterp = m.top.findNode("focusMoveInterp")
+    m.pageSlideAnim = m.top.findNode("pageSlideAnim")
+    m.pageSlideInterp = m.top.findNode("pageSlideInterp")
+    m.searchFocusAnim = m.top.findNode("searchFocusAnim")
+    m.searchScaleInterp = m.top.findNode("searchScaleInterp")
+    m.artPopAnim = m.top.findNode("artPopAnim")
+    m.eqPulseAnim = m.top.findNode("eqPulseAnim")
 
     m.orderedPhotos = []
     m.photos = []
@@ -28,7 +84,6 @@ sub init()
     m.activePlayingUrl = ""
     m.lastArtQuery = ""
     m.stationCards = []
-    m.ignoringVoiceEvent = false
     buildStationGridUI()
 
     m.vibes = [
@@ -100,7 +155,6 @@ sub init()
     m.posterB.ObserveField("loadStatus", "onPosterBLoadStatus")
     m.heroAlbumPoster.ObserveField("loadStatus", "onAlbumArtLoadStatus")
     m.overlayCloseAnim.ObserveField("state", "onOverlayCloseAnimState")
-    if m.voiceSearchBox <> invalid then m.voiceSearchBox.ObserveField("text", "onVoiceSearchTextChange")
 
     updateLivingRoomClock()
     m.clockTimer.control = "start"
@@ -133,7 +187,10 @@ sub updateLivingRoomClock()
     if mnt < 10 then minStr = "0" + minStr
     m.clockTimeLabel.text = h12.ToStr() + ":" + minStr + " " + ampm
     months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-    m.clockDateLabel.text = dt.GetWeekday() + ", " + months[dt.GetMonth() - 1] + " " + dt.GetDayOfMonth().ToStr()
+    mIdx = dt.GetMonth() - 1
+    mName = "Jan"
+    if mIdx >= 0 and mIdx < months.Count() then mName = months[mIdx]
+    m.clockDateLabel.text = dt.GetWeekday() + ", " + mName + " " + dt.GetDayOfMonth().ToStr()
 end sub
 
 sub discoverPhotos()
@@ -392,7 +449,10 @@ sub playCurrentStation()
     if station.DoesExist("format") and station.format <> "" then streamFormat = station.format
 
     content = CreateObject("roSGNode", "ContentNode")
-    content.setFields({ url: station.url, title: station.name, streamFormat: streamFormat })
+    content.url = station.url
+    content.title = station.name
+    content.streamFormat = streamFormat
+
     m.currentSongTitle = ""
     m.activePlayingUrl = station.url
 
@@ -400,6 +460,7 @@ sub playCurrentStation()
     m.radioPlayer.content = content
     m.radioPlayer.mute = m.isMuted
     m.radioPlayer.control = "play"
+
     requestAlbumArt(getDefaultArtQueryForStation(station.name, vibe.label))
     updateRadioHUD()
     showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), station.name, "Press [UP / DOWN] for Other Genres   •   Press [ * ] for 100 Stations & Voice Search")
@@ -434,14 +495,24 @@ sub onTimedMetaData()
     songTitle = ""
     artistName = ""
     for each k in ["title", "StreamTitle", "TIT2"]
-        if songTitle = "" and meta.DoesExist(k) and meta[k] <> invalid then songTitle = meta[k].ToStr().Trim()
+        if songTitle = "" and meta.DoesExist(k) and meta[k] <> invalid
+            val = meta[k]
+            if type(val) = "roString" or type(val) = "String"
+                songTitle = val.Trim()
+            end if
+        end if
     end for
     for each k in ["artist", "TPE1"]
-        if artistName = "" and meta.DoesExist(k) and meta[k] <> invalid then artistName = meta[k].ToStr().Trim()
+        if artistName = "" and meta.DoesExist(k) and meta[k] <> invalid
+            val = meta[k]
+            if type(val) = "roString" or type(val) = "String"
+                artistName = val.Trim()
+            end if
+        end if
     end for
 
     fullText = songTitle
-    if artistName <> "" and songTitle <> "" then fullText = artistName + " — " + songTitle
+    if artistName <> "" and songTitle <> "" then fullText = artistName + " - " + songTitle
     if fullText <> "" and fullText <> "-" and fullText <> " - " and Instr(1, LCase(fullText), "commercial") = 0
         m.currentSongTitle = fullText
         requestAlbumArt(fullText)
@@ -456,7 +527,6 @@ sub requestAlbumArt(query as String)
     m.lastArtQuery = query
     if m.artTask <> invalid then m.artTask.control = "stop"
     m.artTask = CreateObject("roSGNode", "RadioTask")
-    m.artTask.functionName = "fetchArtwork"
     m.artTask.artworkQuery = query
     m.artTask.ObserveField("artworkUrl", "onArtworkUrlReady")
     m.artTask.control = "RUN"
@@ -531,18 +601,14 @@ sub buildStationGridUI()
     for i = 0 to 8
         cx = colX[i mod 3]
         ry = rowY[Int(i / 3)]
-        cardGroup = addNode(m.stationsGridGroup, "Group", { translation: [cx, ry], scaleRotateCenter: [280, 102] })
+        cardGroup = addNode(m.stationsGridGroup, "Group", { translation: [cx, ry] })
         border = addNode(cardGroup, "Rectangle", { width: 560, height: 204, color: "0x243248FF" })
         bg = addNode(cardGroup, "Rectangle", { translation: [4, 4], width: 552, height: 196, color: "0x101828FF" })
         accent = addNode(cardGroup, "Rectangle", { translation: [4, 4], width: 16, height: 196, color: "0xFFD54FFF" })
         numBadge = addNode(cardGroup, "Label", { translation: [34, 18], width: 496, height: 28, font: "font:SmallestBoldSystemFont", color: "0x80DEEAFF" })
         titleLbl = addNode(cardGroup, "Label", { translation: [34, 48], width: 496, height: 92, font: "font:MediumBoldSystemFont", color: "0xFFFFFFFF", wrap: true })
         playingLbl = addNode(cardGroup, "Label", { translation: [34, 154], width: 496, height: 30, font: "font:SmallestBoldSystemFont", color: "0x00E676FF", text: "" })
-        scaleAnim = addNode(cardGroup, "Animation", { duration: 0.18, easeFunction: "outQuad" })
-        scaleInterp = addNode(scaleAnim, "Vector2DFieldInterpolator", { key: [0.0, 1.0], keyValue: [[1.0, 1.0], [1.0, 1.0]], fieldToInterp: "" })
-        cardGroup.id = "stationCard_" + i.ToStr()
-        scaleInterp.fieldToInterp = cardGroup.id + ".scale"
-        m.stationCards.Push({ group: cardGroup, border: border, bg: bg, accent: accent, numBadge: numBadge, titleLbl: titleLbl, playingLbl: playingLbl, scaleAnim: scaleAnim, scaleInterp: scaleInterp, pos: [cx, ry], isScaled: false })
+        m.stationCards.Push({ group: cardGroup, border: border, bg: bg, accent: accent, numBadge: numBadge, titleLbl: titleLbl, playingLbl: playingLbl, pos: [cx, ry] })
     end for
 end sub
 
@@ -556,14 +622,12 @@ sub openStationsBrowser()
         m.stationsFocusArea = "search"
         m.stationsTopFocusIdx = 0
     end if
-    syncVoiceSearchFocus()
+    syncSearchFocusAnim()
     renderStationsGrid(false, 0)
     m.overlayOpenAnim.control = "start"
 end sub
 
 sub closeStationsBrowser()
-    if m.voiceSearchBox <> invalid then m.voiceSearchBox.active = false
-    m.top.setFocus(true)
     m.overlayCloseAnim.control = "start"
 end sub
 
@@ -576,27 +640,13 @@ sub onOverlayCloseAnimState()
     end if
 end sub
 
-sub syncVoiceSearchFocus()
-    if m.voiceSearchBox = invalid then return
-    if m.isStationsOpen and m.stationsFocusArea = "search" and m.stationsTopFocusIdx = 0
-        m.voiceSearchBox.active = true
-        m.voiceSearchBox.setFocus(true)
+sub syncSearchFocusAnim()
+    if m.stationsFocusArea = "search" and m.stationsTopFocusIdx = 0
         m.searchScaleInterp.keyValue = [[1.0, 1.0], [1.028, 1.028]]
         m.searchFocusAnim.control = "start"
     else
-        m.voiceSearchBox.active = false
-        m.top.setFocus(true)
-        m.searchScaleInterp.keyValue = [m.searchBoxGroup.scale, [1.0, 1.0]]
+        m.searchScaleInterp.keyValue = [[1.028, 1.028], [1.0, 1.0]]
         m.searchFocusAnim.control = "start"
-    end if
-end sub
-
-sub onVoiceSearchTextChange()
-    if m.ignoringVoiceEvent or m.voiceSearchBox = invalid or not m.isStationsOpen then return
-    newText = m.voiceSearchBox.text
-    if newText <> m.stationsSearchQuery
-        filterStationsByQuery(newText)
-        renderStationsGrid(true, 1)
     end if
 end sub
 
@@ -604,11 +654,11 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
     total = m.filteredStations.Count()
     if m.stationsSearchQuery <> ""
         m.stationsHeaderTitle.text = "SEARCH: " + UCase(m.stationsSearchQuery) + "  (" + total.ToStr() + ")"
-        m.searchBoxLabel.text = "Voice / Search: " + m.stationsSearchQuery + "   (Speak or Press OK)"
+        m.searchBoxLabel.text = "Search: " + m.stationsSearchQuery + "   (Press OK for Mic / Keyboard)"
         m.searchBoxLabel.color = "0xFFFFFFFF"
     else
         m.stationsHeaderTitle.text = "PANDORA RADIO  •  " + total.ToStr() + " STATIONS"
-        m.searchBoxLabel.text = "Speak into Remote Mic or Press OK to Search..."
+        m.searchBoxLabel.text = "Press OK to Speak into Remote Mic or Type..."
         m.searchBoxLabel.color = "0xB0BEC5FF"
     end if
 
@@ -663,7 +713,7 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
             card.titleLbl.text = st.name
             card.accent.color = st.color
             if st.url = m.activePlayingUrl
-                card.playingLbl.text = "● NOW PLAYING LIVE"
+                card.playingLbl.text = "NOW PLAYING LIVE"
                 card.playingLbl.color = "0x00E676FF"
             else
                 card.playingLbl.text = "Press [OK] to Listen"
@@ -674,13 +724,9 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
             if isCardFocused
                 card.border.color = "0xFFD54FFF"
                 card.bg.color = "0x1A2942FF"
-                if not card.isScaled
-                    card.scaleInterp.keyValue = [card.group.scale, [1.036, 1.036]]
-                    card.scaleAnim.control = "start"
-                    card.isScaled = true
-                end if
                 if animateFocus
-                    m.focusMoveInterp.keyValue = [m.gridFocusRing.translation, card.pos]
+                    curPos = m.gridFocusRing.translation
+                    m.focusMoveInterp.keyValue = [[curPos[0], curPos[1]], card.pos]
                     m.focusMoveAnim.control = "start"
                 else
                     m.gridFocusRing.translation = card.pos
@@ -688,11 +734,6 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
             else
                 card.border.color = "0x243248FF"
                 card.bg.color = "0x101828FF"
-                if card.isScaled
-                    card.scaleInterp.keyValue = [card.group.scale, [1.0, 1.0]]
-                    card.scaleAnim.control = "start"
-                    card.isScaled = false
-                end if
             end if
         else
             card.group.visible = false
@@ -762,15 +803,15 @@ function handleStationsKeyEvent(key as String) as Boolean
     if m.stationsFocusArea = "search"
         if key = "left" and m.stationsTopFocusIdx > 0
             m.stationsTopFocusIdx = 0
-            syncVoiceSearchFocus()
+            syncSearchFocusAnim()
             renderStationsGrid(false, 0)
         else if key = "right" and m.stationsTopFocusIdx < 1
             m.stationsTopFocusIdx = 1
-            syncVoiceSearchFocus()
+            syncSearchFocusAnim()
             renderStationsGrid(false, 0)
         else if key = "down" and total > 0
             m.stationsFocusArea = "grid"
-            syncVoiceSearchFocus()
+            syncSearchFocusAnim()
             renderStationsGrid(true, 0)
         else if key = "OK"
             if m.stationsTopFocusIdx = 0
@@ -778,7 +819,7 @@ function handleStationsKeyEvent(key as String) as Boolean
             else
                 filterStationsByQuery("")
                 m.stationsFocusArea = "grid"
-                syncVoiceSearchFocus()
+                syncSearchFocusAnim()
                 renderStationsGrid(true, -1)
             end if
         end if
@@ -795,7 +836,7 @@ function handleStationsKeyEvent(key as String) as Boolean
         if (m.stationsSelectedIdx mod 9) < 3
             m.stationsFocusArea = "search"
             m.stationsTopFocusIdx = 0
-            syncVoiceSearchFocus()
+            syncSearchFocusAnim()
             renderStationsGrid(false, 0)
         else
             m.stationsSelectedIdx = m.stationsSelectedIdx - 3
@@ -827,7 +868,10 @@ sub playStationFromCatalog(st as Object)
     streamFormat = "mp3"
     if st.DoesExist("format") and st.format <> "" then streamFormat = st.format
     content = CreateObject("roSGNode", "ContentNode")
-    content.setFields({ url: st.url, title: st.name, streamFormat: streamFormat })
+    content.url = st.url
+    content.title = st.name
+    content.streamFormat = streamFormat
+
     m.currentSongTitle = ""
     m.activePlayingUrl = st.url
     m.currentStationList = [st]
@@ -852,7 +896,6 @@ sub openStationSearchDialog()
     dlg.message = ["Hold the Mic button on your Roku Remote to speak, or type a station/artist (K-LOVE, Sinatra, Jazz, News, Christmas):"]
     dlg.text = m.stationsSearchQuery
     dlg.buttons = ["Search", "Show All 100", "Cancel"]
-    if dlg.keyboard <> invalid then dlg.keyboard.voiceEnabled = true
     dlg.ObserveField("buttonSelected", "onSearchDialogButton")
     m.searchDialog = dlg
     m.top.getScene().dialog = dlg
@@ -871,19 +914,15 @@ sub onSearchDialogButton()
         filterStationsByQuery("")
         m.stationsFocusArea = "grid"
     end if
-    syncVoiceSearchFocus()
+    syncSearchFocusAnim()
     renderStationsGrid(true, 1)
+    m.top.setFocus(true)
 end sub
 
 sub filterStationsByQuery(query as String)
     cleanQ = LCase(query.Trim())
     m.stationsSearchQuery = query.Trim()
     m.stationsSelectedIdx = 0
-    if m.voiceSearchBox <> invalid
-        m.ignoringVoiceEvent = true
-        m.voiceSearchBox.text = m.stationsSearchQuery
-        m.ignoringVoiceEvent = false
-    end if
     if cleanQ = ""
         m.filteredStations = m.allStations
         return

@@ -37,7 +37,7 @@
         </Group>
 
         <!-- Animated Top Radio Toast Banner -->
-        <Group id="toastGroup" translation="[260, 36]" visible="false" opacity="0.0">
+        <Group id="toastGroup" translation="[260, 36]" visible="false" opacity="1.0">
             <Rectangle width="1400" height="166" color="0xFFD54FFF" />
             <Rectangle translation="[5, 5]" width="1390" height="156" color="0x0B0E17F4" />
             <Label id="toastTitleLabel" translation="[40, 16]" width="1320" height="40" font="font:MediumBoldSystemFont" color="0xFFD54FFF" horizAlign="center" text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
@@ -45,8 +45,8 @@
             <Label id="toastSubLabel" translation="[40, 118]" width="1320" height="32" font="font:SmallestBoldSystemFont" color="0xB0BEC5FF" horizAlign="center" text="Press [UP / DOWN] to Change Genre   •   Press [ * ] to Browse &amp; Search All 100 Stations" />
         </Group>
         <Animation id="toastSlideAnim" duration="0.26" easeFunction="outCubic">
-            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="toastGroup.opacity" />
-            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[260, 8], [260, 36]]" fieldToInterp="toastGroup.translation" />
+            <FloatFieldInterpolator id="toastOpacityInterp" key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="toastGroup.opacity" />
+            <Vector2DFieldInterpolator id="toastTransInterp" key="[0.0, 1.0]" keyValue="[[260, 8], [260, 36]]" fieldToInterp="toastGroup.translation" />
         </Animation>
 
         <!-- Compact, Sleek Screensaver Bottom Bar (128px Tall) with Live Album Cover -->
@@ -63,7 +63,6 @@
             <Label id="radioHeaderLabel" translation="[640, 12]" width="1096" height="26" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="right" text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
             <Label id="radioStatusLabel" translation="[640, 38]" width="1096" height="44" font="font:MediumBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="100.3 K-LOVE Los Angeles" />
             <Label id="nowPlayingLabel" translation="[640, 84]" width="1096" height="30" font="font:SmallestBoldSystemFont" color="0xA5D6A7FF" horizAlign="right" text="Live Broadcast  •  Press [ * ] for 100 Stations &amp; Voice Search" />
-            <Label id="controlsHintLabel" translation="[640, 84]" width="1096" height="30" font="font:SmallestBoldSystemFont" color="0xEEEEEEFF" horizAlign="right" visible="false" text="" />
 
             <!-- Album Cover Art Frame on Screensaver HUD -->
             <Group id="hudAlbumGroup" translation="[1758, 14]" scaleRotateCenter="[52, 52]">
@@ -75,23 +74,22 @@
         </Group>
 
         <!-- Polished Pandora-for-TV 100-Station Browser & Voice Search Screen -->
-        <Group id="stationsOverlay" visible="false" opacity="0.0">
+        <Group id="stationsOverlay" visible="false" opacity="1.0">
             <Rectangle width="1920" height="1080" color="0x070B14F8" />
             <Rectangle width="1920" height="6" color="0xFFD54FFF" />
 
             <Group id="stationsContentGroup" translation="[0, 0]">
                 <!-- Top Left: Brand Header & Voice Search Bar -->
                 <Label id="stationsHeaderTitle" translation="[80, 30]" width="980" height="50" font="font:LargeBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="PANDORA RADIO  •  100 STATIONS" />
-                <Label id="stationsSubHeader" translation="[80, 80]" width="980" height="30" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="left" text="Move UP to the Search Bar to use your Roku Controller Mic or Keyboard   •   Press [ * ] to Return to Photos" />
+                <Label id="stationsSubHeader" translation="[80, 80]" width="980" height="30" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="left" text="Move UP to the Search Bar &amp; Press OK to Use Controller Mic or Keyboard   •   Press [ * ] for Photos" />
 
                 <!-- Search Row (Move UP from Top Row of Stations to Focus!) -->
                 <Group id="searchBoxGroup" translation="[80, 120]" scaleRotateCenter="[390, 38]">
                     <Rectangle id="searchBoxBorder" width="780" height="76" color="0x28354AFF" />
                     <Rectangle id="searchBoxBg" translation="[4, 4]" width="772" height="68" color="0x111A2BFF" />
-                    <Rectangle id="micBadgeBg" translation="[14, 14]" width="48" height="48" color="0x1E88E5FF" />
-                    <Label id="micBadgeLabel" translation="[14, 22]" width="48" height="34" font="font:SmallestBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="MIC" />
-                    <Label id="searchBoxLabel" translation="[76, 18]" width="684" height="42" font="font:MediumBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="Speak into Remote Mic or Press OK to Search..." />
-                    <VoiceTextEditBox id="voiceSearchBox" translation="[68, 12]" width="696" height="52" voiceEnabled="true" opacity="0.01" />
+                    <Rectangle id="micBadgeBg" translation="[14, 14]" width="56" height="48" color="0x1E88E5FF" />
+                    <Label id="micBadgeLabel" translation="[14, 22]" width="56" height="34" font="font:SmallestBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="MIC" />
+                    <Label id="searchBoxLabel" translation="[84, 18]" width="676" height="42" font="font:MediumBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="Press OK to Speak into Remote Mic or Type..." />
                 </Group>
 
                 <Group id="showAllBtnGroup" translation="[880, 120]" scaleRotateCenter="[130, 38]">
@@ -115,10 +113,10 @@
 
                     <!-- Animated Equalizer Bars + NOW PLAYING Badge -->
                     <Group id="eqGroup" translation="[172, 22]">
-                        <Rectangle id="eqBar1" translation="[0, 10]" width="6" height="14" color="0x00E676FF" />
-                        <Rectangle id="eqBar2" translation="[10, 4]" width="6" height="20" color="0x00E676FF" />
+                        <Rectangle id="eqBar1" translation="[0, 6]" width="6" height="18" color="0x00E676FF" />
+                        <Rectangle id="eqBar2" translation="[10, 2]" width="6" height="22" color="0x00E676FF" />
                         <Rectangle id="eqBar3" translation="[20, 8]" width="6" height="16" color="0x00E676FF" />
-                        <Rectangle id="eqBar4" translation="[30, 2]" width="6" height="22" color="0x00E676FF" />
+                        <Rectangle id="eqBar4" translation="[30, 4]" width="6" height="20" color="0x00E676FF" />
                         <Label id="heroBadgeLabel" translation="[48, 0]" width="440" height="28" font="font:SmallestBoldSystemFont" color="0x00E676FF" horizAlign="left" text="NOW PLAYING LIVE" />
                     </Group>
 
@@ -130,10 +128,9 @@
                 <!-- 3x3 Animated Station Grid + Floating Selection Frame -->
                 <Group id="stationsGridWrap" translation="[0, 0]">
                     <Group id="stationsGridGroup" />
-                    <!-- Smooth Gliding Gold Focus Frame -->
-                    <Group id="gridFocusRing" translation="[80, 224]" visible="true">
+                    <Group id="gridFocusRing" translation="[80, 224]" scaleRotateCenter="[280, 102]" visible="true">
                         <Rectangle width="560" height="204" color="0xFFD54FFF" />
-                        <Rectangle translation="[6, 6]" width="548" height="192" color="0x00000000" />
+                        <Rectangle translation="[6, 6]" width="548" height="192" color="0x1A294266" />
                     </Group>
                 </Group>
 
@@ -146,36 +143,37 @@
             </Group>
         </Group>
 
-        <!-- UI Polish & Micro-Interaction Animations -->
-        <Animation id="overlayOpenAnim" duration="0.28" easeFunction="outCubic">
-            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="stationsOverlay.opacity" />
-            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0, 32], [0, 0]]" fieldToInterp="stationsContentGroup.translation" />
+        <!-- UI Polish & Micro-Interaction Animations (100% Standard Roku SceneGraph) -->
+        <Animation id="overlayOpenAnim" duration="0.26" easeFunction="outCubic">
+            <FloatFieldInterpolator id="overlayOpenOpacity" key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="stationsOverlay.opacity" />
+            <Vector2DFieldInterpolator id="overlayOpenTrans" key="[0.0, 1.0]" keyValue="[[0, 28], [0, 0]]" fieldToInterp="stationsContentGroup.translation" />
         </Animation>
-        <Animation id="overlayCloseAnim" duration="0.20" easeFunction="inQuad">
-            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="stationsOverlay.opacity" />
-            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0, 0], [0, 24]]" fieldToInterp="stationsContentGroup.translation" />
+        <Animation id="overlayCloseAnim" duration="0.18" easeFunction="inQuad">
+            <FloatFieldInterpolator id="overlayCloseOpacity" key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="stationsOverlay.opacity" />
+            <Vector2DFieldInterpolator id="overlayCloseTrans" key="[0.0, 1.0]" keyValue="[[0, 0], [0, 24]]" fieldToInterp="stationsContentGroup.translation" />
         </Animation>
         <Animation id="focusMoveAnim" duration="0.16" easeFunction="outCubic">
             <Vector2DFieldInterpolator id="focusMoveInterp" key="[0.0, 1.0]" keyValue="[[80, 224], [80, 224]]" fieldToInterp="gridFocusRing.translation" />
+            <Vector2DFieldInterpolator id="focusScaleInterp" key="[0.0, 0.5, 1.0]" keyValue="[[1.0, 1.0], [1.032, 1.032], [1.015, 1.015]]" fieldToInterp="gridFocusRing.scale" />
         </Animation>
         <Animation id="pageSlideAnim" duration="0.22" easeFunction="outCubic">
-            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.25, 1.0]" fieldToInterp="stationsGridGroup.opacity" />
+            <FloatFieldInterpolator id="pageFadeInterp" key="[0.0, 1.0]" keyValue="[0.3, 1.0]" fieldToInterp="stationsGridGroup.opacity" />
             <Vector2DFieldInterpolator id="pageSlideInterp" key="[0.0, 1.0]" keyValue="[[32, 0], [0, 0]]" fieldToInterp="stationsGridGroup.translation" />
         </Animation>
         <Animation id="searchFocusAnim" duration="0.18" easeFunction="outQuad">
             <Vector2DFieldInterpolator id="searchScaleInterp" key="[0.0, 1.0]" keyValue="[[1.0, 1.0], [1.025, 1.025]]" fieldToInterp="searchBoxGroup.scale" />
         </Animation>
-        <Animation id="artPopAnim" duration="0.32" easeFunction="outBack">
-            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.2, 1.0]" fieldToInterp="heroAlbumPoster.opacity" />
-            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.2, 1.0]" fieldToInterp="hudAlbumPoster.opacity" />
-            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0.90, 0.90], [1.0, 1.0]]" fieldToInterp="heroAlbumGroup.scale" />
-            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0.90, 0.90], [1.0, 1.0]]" fieldToInterp="hudAlbumGroup.scale" />
+        <Animation id="artPopAnim" duration="0.30" easeFunction="outQuad">
+            <FloatFieldInterpolator id="artHeroOpacityInterp" key="[0.0, 1.0]" keyValue="[0.2, 1.0]" fieldToInterp="heroAlbumPoster.opacity" />
+            <FloatFieldInterpolator id="artHudOpacityInterp" key="[0.0, 1.0]" keyValue="[0.2, 1.0]" fieldToInterp="hudAlbumPoster.opacity" />
+            <Vector2DFieldInterpolator id="artHeroScaleInterp" key="[0.0, 0.6, 1.0]" keyValue="[[0.92, 0.92], [1.04, 1.04], [1.0, 1.0]]" fieldToInterp="heroAlbumGroup.scale" />
+            <Vector2DFieldInterpolator id="artHudScaleInterp" key="[0.0, 0.6, 1.0]" keyValue="[[0.92, 0.92], [1.04, 1.04], [1.0, 1.0]]" fieldToInterp="hudAlbumGroup.scale" />
         </Animation>
-        <Animation id="eqPulseAnim" duration="0.85" repeat="true" easeFunction="inOutSine">
-            <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[8.0, 22.0, 8.0]" fieldToInterp="eqBar1.height" />
-            <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[22.0, 10.0, 22.0]" fieldToInterp="eqBar2.height" />
-            <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[12.0, 24.0, 12.0]" fieldToInterp="eqBar3.height" />
-            <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[20.0, 8.0, 20.0]" fieldToInterp="eqBar4.height" />
+        <Animation id="eqPulseAnim" duration="0.80" repeat="true" easeFunction="inOutQuad">
+            <FloatFieldInterpolator id="eqInterp1" key="[0.0, 0.5, 1.0]" keyValue="[8.0, 22.0, 8.0]" fieldToInterp="eqBar1.height" />
+            <FloatFieldInterpolator id="eqInterp2" key="[0.0, 0.5, 1.0]" keyValue="[22.0, 10.0, 22.0]" fieldToInterp="eqBar2.height" />
+            <FloatFieldInterpolator id="eqInterp3" key="[0.0, 0.5, 1.0]" keyValue="[12.0, 24.0, 12.0]" fieldToInterp="eqBar3.height" />
+            <FloatFieldInterpolator id="eqInterp4" key="[0.0, 0.5, 1.0]" keyValue="[20.0, 8.0, 20.0]" fieldToInterp="eqBar4.height" />
         </Animation>
 
         <!-- Timers & Audio Player -->

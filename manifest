@@ -1,15 +1,16 @@
 # Channel Details
 title=Family Frame & Radio
-major_version=1
+major_version=2
 minor_version=0
 build_version=1
 
-# Channel Assets (Standard Roku HD/FHD Icon Placeholders)
+# Channel Cover Icons & Splash Screens
+mm_icon_focus_fhd=pkg:/channel_icon_fhd.png
 mm_icon_focus_hd=pkg:/channel_icon_hd.png
 mm_icon_focus_sd=pkg:/channel_icon_sd.png
 splash_screen_fhd=pkg:/splash_fhd.png
 splash_screen_hd=pkg:/splash_hd.png
-splash_color=#121212
+splash_color=#0E1626
 splash_min_time=1000
 
 # Screen Resolution (Full HD 1080p)
