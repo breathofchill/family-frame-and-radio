@@ -126,3 +126,23 @@ function getAll100Stations() as Object
         { name: "Christmas Radio FM", genre: "Christmas & Holiday", color: "0xC62828FF", url: "http://xmasfm1.dmd2streaming.com/christmasradiofm-128.mp3", format: "mp3" }
     ]
 end function
+
+function getDefaultArtQueryForStation(stationName as String, genreName as String) as String
+    sn = LCase(stationName) : gn = LCase(genreName)
+    if Instr(1, sn, "sinatra") > 0 then return "Frank Sinatra Ultimate Sinatra"
+    if Instr(1, sn, "nat king cole") > 0 then return "Nat King Cole Unforgettable"
+    if Instr(1, sn, "beatles") > 0 then return "The Beatles Abbey Road"
+    if Instr(1, sn, "piano") > 0 then return "Ludovico Einaudi Solo Piano"
+    if Instr(1, gn, "christian") > 0 or Instr(1, sn, "k-love") > 0 then return "MercyMe I Can Only Imagine"
+    if Instr(1, gn, "classical") > 0 or Instr(1, sn, "kusc") > 0 then return "Yo-Yo Ma Bach Cello"
+    if Instr(1, gn, "oldies") > 0 then return "Elvis Presley 30 #1 Hits"
+    if Instr(1, gn, "news") > 0 then return "Aaron Copland Fanfare for the Common Man"
+    if Instr(1, gn, "jazz") > 0 then return "George Benson Breezin"
+    if Instr(1, gn, "big band") > 0 or Instr(1, gn, "sinatra") > 0 then return "Frank Sinatra Come Fly With Me"
+    if Instr(1, gn, "country") > 0 then return "Johnny Cash Folsom Prison"
+    if Instr(1, gn, "motown") > 0 or Instr(1, gn, "soul") > 0 then return "The Temptations My Girl"
+    if Instr(1, gn, "70s") > 0 or Instr(1, gn, "easy") > 0 then return "Carpenters Singles 1969-1973"
+    if Instr(1, gn, "christmas") > 0 then return "Bing Crosby White Christmas"
+    return "Frank Sinatra Fly Me To The Moon"
+end function
+

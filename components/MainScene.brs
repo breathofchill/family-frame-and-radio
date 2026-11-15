@@ -1,46 +1,9 @@
 sub init()
     m.top.setFocus(true)
+    for each id in ["posterA","posterB","fadeAtoB","fadeBtoA","emptyStateGroup","toastGroup","toastTitleLabel","toastMessageLabel","toastSubLabel","toastSlideAnim","clockGroup","clockTimeLabel","clockDateLabel","photoHeaderLabel","photoCounterLabel","photoSubLabel","radioHeaderLabel","radioStatusLabel","nowPlayingLabel","hudAlbumGroup","hudAlbumPoster","slideshowTimer","toastTimer","clockTimer","radioPlayer","stationsOverlay","stationsContentGroup","stationsHeaderTitle","stationsNowPlayingLabel","stationsSongLabel","stationsGenreLabel","heroAlbumGroup","heroAlbumPoster","heroBadgeLabel","searchBoxGroup","searchBoxBorder","searchBoxBg","micBadgeBg","searchBoxLabel","voiceSearchBox","showAllBtnGroup","showAllBtnBorder","showAllBtnBg","stationsGridGroup","gridFocusRing","stationsEmptyLabel","stationsPageLabel","overlayOpenAnim","overlayCloseAnim","focusMoveAnim","focusMoveInterp","pageSlideAnim","pageSlideInterp","searchFocusAnim","searchScaleInterp","artPopAnim","eqPulseAnim"]
+        m[id] = m.top.findNode(id)
+    end for
 
-    ' Bind SceneGraph UI Nodes
-    m.posterA = m.top.findNode("posterA")
-    m.posterB = m.top.findNode("posterB")
-    m.fadeAtoB = m.top.findNode("fadeAtoB")
-    m.fadeBtoA = m.top.findNode("fadeBtoA")
-    m.emptyStateGroup = m.top.findNode("emptyStateGroup")
-    m.toastGroup = m.top.findNode("toastGroup")
-    m.toastTitleLabel = m.top.findNode("toastTitleLabel")
-    m.toastMessageLabel = m.top.findNode("toastMessageLabel")
-    m.toastSubLabel = m.top.findNode("toastSubLabel")
-    m.clockGroup = m.top.findNode("clockGroup")
-    m.clockTimeLabel = m.top.findNode("clockTimeLabel")
-    m.clockDateLabel = m.top.findNode("clockDateLabel")
-    m.photoHeaderLabel = m.top.findNode("photoHeaderLabel")
-    m.photoCounterLabel = m.top.findNode("photoCounterLabel")
-    m.photoSubLabel = m.top.findNode("photoSubLabel")
-    m.radioHeaderLabel = m.top.findNode("radioHeaderLabel")
-    m.radioStatusLabel = m.top.findNode("radioStatusLabel")
-    m.nowPlayingLabel = m.top.findNode("nowPlayingLabel")
-    m.slideshowTimer = m.top.findNode("slideshowTimer")
-    m.toastTimer = m.top.findNode("toastTimer")
-    m.clockTimer = m.top.findNode("clockTimer")
-    m.radioPlayer = m.top.findNode("radioPlayer")
-
-    ' Pandora-for-TV 100-Station Browser Nodes
-    m.stationsOverlay = m.top.findNode("stationsOverlay")
-    m.stationsHeaderTitle = m.top.findNode("stationsHeaderTitle")
-    m.stationsNowPlayingLabel = m.top.findNode("stationsNowPlayingLabel")
-    m.searchBoxBorder = m.top.findNode("searchBoxBorder")
-    m.searchBoxBg = m.top.findNode("searchBoxBg")
-    m.searchBoxLabel = m.top.findNode("searchBoxLabel")
-    m.showAllBtnBorder = m.top.findNode("showAllBtnBorder")
-    m.showAllBtnBg = m.top.findNode("showAllBtnBg")
-    m.closeStationsBtnBorder = m.top.findNode("closeStationsBtnBorder")
-    m.closeStationsBtnBg = m.top.findNode("closeStationsBtnBg")
-    m.stationsGridGroup = m.top.findNode("stationsGridGroup")
-    m.stationsEmptyLabel = m.top.findNode("stationsEmptyLabel")
-    m.stationsPageLabel = m.top.findNode("stationsPageLabel")
-
-    ' Slideshow State (Engineered for 200+ to 1,000+ Photos)
     m.orderedPhotos = []
     m.photos = []
     m.currentPhotoIndex = 0
@@ -49,138 +12,83 @@ sub init()
     m.isShuffleMode = false
     m.pendingPoster = ""
     m.currentSongTitle = ""
+    m.currentVibeIndex = 0
+    m.currentStationList = []
+    m.currentStationIndex = 0
+    m.isMuted = false
 
-    ' 100-Station Pandora-Style Browser State
     m.allStations = getAll100Stations()
     m.filteredStations = m.allStations
     m.isStationsOpen = false
     m.stationsFocusArea = "grid"
     m.stationsTopFocusIdx = 0
     m.stationsSelectedIdx = 0
+    m.lastPageStart = 0
     m.stationsSearchQuery = ""
     m.activePlayingUrl = ""
+    m.lastArtQuery = ""
     m.stationCards = []
+    m.ignoringVoiceEvent = false
     buildStationGridUI()
 
-    ' =========================================================================
-    ' 9 MAIN GRANDPARENT-FRIENDLY RADIO GENRES
-    ' Includes 100.3 K-LOVE LA, Classical KUSC 91.5 LA, Golden Oldies,
-    ' LA News (LAist 89.3 KPCC & KCRW 89.9), plus 5 more beloved genres!
-    ' =========================================================================
     m.vibes = [
-        {
-            label: "Christian & Encouraging (K-LOVE)",
-            tag: "christian",
-            searchName: "K-LOVE",
-            curated: [
-                { name: "100.3 K-LOVE Los Angeles", url: "https://maestro.emfcdn.com/stream_for/k-love/tunein", format: "aac" },
-                { name: "100.3 K-LOVE LA (Main Feed)", url: "https://maestro.emfcdn.com/stream_for/k-love/iheart/aac", format: "aac" },
-                { name: "100.3 K-LOVE LA (Backup Feed)", url: "https://maestro.emfcdn.com/stream_for/k-love/airable/aac", format: "aac" },
-                { name: "K-LOVE 80s & Classic Christian", url: "https://maestro.emfcdn.com/stream_for/k-love-80s/airable/aac", format: "aac" },
-                { name: "Air1 Worship Music (K-LOVE Network)", url: "https://maestro.emfcdn.com/stream_for/air1/airable/aac", format: "aac" }
-            ]
-        },
-        {
-            label: "Classical Symphony (91.5 KUSC LA)",
-            tag: "classical",
-            searchName: "KUSC",
-            curated: [
-                { name: "Classical KUSC 91.5 FM Los Angeles", url: "http://playerservices.streamtheworld.com/api/livestream-redirect/KUSCMP256.mp3", format: "mp3" },
-                { name: "Classical KUSC 91.5 FM LA (Standard)", url: "http://playerservices.streamtheworld.com/api/livestream-redirect/KUSCMP128.mp3", format: "mp3" },
-                { name: "Classical KUSC 91.5 FM LA (AAC)", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/KUSCAAC64.aac", format: "aac" },
-                { name: "WQXR 105.9 FM Classical Philharmonic", url: "https://stream.wqxr.org/wqxr-web", format: "mp3" }
-            ]
-        },
-        {
-            label: "50s & 60s Golden Oldies",
-            tag: "oldies",
-            searchName: "",
-            curated: [
-                { name: "Back To The 50s & 60s Golden Oldies", url: "http://strm112.1.fm/60s_70s_mobile_mp3", format: "mp3" },
-                { name: ".977 Golden Oldies Hits", url: "http://29318.live.streamtheworld.com/977_OLDIES_SC", format: "mp3" },
-                { name: "NonStop 50s & 60s Oldies", url: "https://ais-sa2.cdnstream1.com/2383_128.mp3", format: "mp3" },
-                { name: "Classic Vinyl HD (Golden Era)", url: "https://icecast.walmradio.com:8443/classic", format: "mp3" }
-            ]
-        },
-        {
-            label: "Los Angeles News & Talk",
-            tag: "npr",
-            searchName: "KPCC",
-            curated: [
-                { name: "LAist 89.3 FM KPCC (LA Public Radio News)", url: "https://laist.streamguys1.com/kpcc-mp3?aw_0_1st.playerId=laist", format: "mp3" },
-                { name: "LAist 89.3 FM KPCC Pasadena/LA (Backup)", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/KPCC_FM.mp3", format: "mp3" },
-                { name: "KCRW 89.9 FM Los Angeles / Santa Monica", url: "https://streams.kcrw.com/kcrw_mp3?aw_0_1st.playerid=radio-browser.info", format: "mp3" },
-                { name: "KFI AM 640 Los Angeles News & Talk", url: "http://stream.revma.ihrhls.com/zc177", format: "aac" }
-            ]
-        },
-        {
-            label: "Smooth Jazz & LA Jazz",
-            tag: "smooth jazz",
-            searchName: "",
-            curated: [
-                { name: "101 Smooth Jazz (Mellow Mix)", url: "http://jking.cdnstream1.com/b22139_128mp3", format: "mp3" },
-                { name: "101 Smooth Jazz (Main Lounge)", url: "http://streaming.live365.com/b48071_128mp3", format: "mp3" },
-                { name: "KJAZZ 88.1 FM Los Angeles / Long Beach", url: "https://streaming.live365.com/a49833/playlist.m3u8", format: "hls" },
-                { name: "WWOZ 90.7 FM Traditional Jazz", url: "https://wwoz-sc.streamguys1.com/wwoz-hi.mp3", format: "mp3" }
-            ]
-        },
-        {
-            label: "Big Band, Swing & Sinatra",
-            tag: "big band",
-            searchName: "",
-            curated: [
-                { name: "Exclusively Frank Sinatra & Standards", url: "https://2.mystreaming.net/er/franksinatra/icecast.audio", format: "mp3" },
-                { name: "Classic Vinyl HD (1940s & 50s Big Band)", url: "https://icecast.walmradio.com:8443/classic", format: "mp3" },
-                { name: "Instrumentals Forever Orchestra", url: "http://quincy.torontocast.com:1910/stream", format: "mp3" }
-            ]
-        },
-        {
-            label: "Classic Country Legends",
-            tag: "classic country",
-            searchName: "",
-            curated: [
-                { name: "Highway 181 (Classic Country Legends)", url: "http://listen.181fm.com/181-highway_128k.mp3", format: "mp3" },
-                { name: "1.FM Classic Country Hall of Fame", url: "http://strm112.1.fm/ccountry_mobile_mp3", format: "mp3" }
-            ]
-        },
-        {
-            label: "Classic Motown & 60s Soul",
-            tag: "motown",
-            searchName: "",
-            curated: [
-                { name: "24/7 Classic Motown & Soul", url: "http://antares.dribbcast.com:4237/stream", format: "mp3" },
-                { name: "Stax & Motown Legends Radio", url: "http://jazz-wr15.ice.infomaniak.ch/jazz-wr15-128.mp3", format: "mp3" },
-                { name: "Motown Classics Nonstop", url: "http://94.23.159.187:9990/;", format: "mp3" }
-            ]
-        },
-        {
-            label: "70s Soft Rock & Easy Listening",
-            tag: "easy listening",
-            searchName: "",
-            curated: [
-                { name: "Left Coast 70s (Mellow 70s Soft Rock)", url: "https://ice2.somafm.com/seventies-320-mp3", format: "mp3" },
-                { name: "Gold Easy Listening & Timeless Hits", url: "https://media-ssl.musicradio.com/GoldMP3", format: "mp3" },
-                { name: "Instrumentals Forever Easy Listening", url: "http://quincy.torontocast.com:1910/stream", format: "mp3" }
-            ]
-        },
-        {
-            name: "Christmas Classics & Holiday",
-            tag: "christmas",
-            curated: [
-                { name: "181.FM Christmas Classics", url: "http://listen.181fm.com/181-xtraditional_128k.mp3", format: "mp3" },
-                { name: "Classical Christmas FM", url: "https://christmasfm.cdnstream1.com/2550_128.mp3?aw_0_1st.playerid=esPlayer&aw_0_1st.skey=1605423292", format: "mp3" },
-                { name: "1.FM Always Christmas Radio", url: "http://strm112.1.fm/christmas_mobile_mp3", format: "mp3" },
-                { name: "Sky Radio Christmas", url: "http://playerservices.streamtheworld.com/api/livestream-redirect/SRGSTR08.mp3", format: "mp3" }
-            ]
-        }
+        { label: "Christian & Encouraging (K-LOVE)", tag: "christian", searchName: "K-LOVE", curated: [
+            { name: "100.3 K-LOVE Los Angeles", url: "https://maestro.emfcdn.com/stream_for/k-love/tunein", format: "aac" },
+            { name: "100.3 K-LOVE LA (Main Feed)", url: "https://maestro.emfcdn.com/stream_for/k-love/iheart/aac", format: "aac" },
+            { name: "100.3 K-LOVE LA (Backup Feed)", url: "https://maestro.emfcdn.com/stream_for/k-love/airable/aac", format: "aac" },
+            { name: "K-LOVE 80s & Classic Christian", url: "https://maestro.emfcdn.com/stream_for/k-love-80s/airable/aac", format: "aac" },
+            { name: "Air1 Worship Music (K-LOVE Network)", url: "https://maestro.emfcdn.com/stream_for/air1/airable/aac", format: "aac" }
+        ]},
+        { label: "Classical Symphony (91.5 KUSC LA)", tag: "classical", searchName: "KUSC", curated: [
+            { name: "Classical KUSC 91.5 FM Los Angeles", url: "http://playerservices.streamtheworld.com/api/livestream-redirect/KUSCMP256.mp3", format: "mp3" },
+            { name: "Classical KUSC 91.5 FM LA (Standard)", url: "http://playerservices.streamtheworld.com/api/livestream-redirect/KUSCMP128.mp3", format: "mp3" },
+            { name: "Classical KUSC 91.5 FM LA (AAC)", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/KUSCAAC64.aac", format: "aac" },
+            { name: "WQXR 105.9 FM Classical Philharmonic", url: "https://stream.wqxr.org/wqxr-web", format: "mp3" }
+        ]},
+        { label: "50s & 60s Golden Oldies", tag: "oldies", searchName: "", curated: [
+            { name: "1.FM Back to the 50s & 60s Oldies", url: "http://strm112.1.fm/60s_70s_mobile_mp3", format: "mp3" },
+            { name: ".977 50s & 60s Golden Oldies", url: "http://29318.live.streamtheworld.com/977_OLDIES_SC", format: "mp3" },
+            { name: "NonStop Oldies (50s & 60s Hits)", url: "https://ais-sa2.cdnstream1.com/2383_128.mp3", format: "mp3" },
+            { name: "Classic Vinyl HD Vintage Hits", url: "https://icecast.walmradio.com:8443/classic", format: "mp3" }
+        ]},
+        { label: "Los Angeles News & Talk", tag: "npr", searchName: "KPCC", curated: [
+            { name: "LAist 89.3 FM (KPCC Southern California News)", url: "https://laist.streamguys1.com/kpcc-mp3?aw_0_1st.playerId=laist", format: "mp3" },
+            { name: "LAist 89.3 FM KPCC (Alternate Stream)", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/KPCC_FM.mp3", format: "mp3" },
+            { name: "KCRW 89.9 FM Los Angeles News & Culture", url: "https://streams.kcrw.com/kcrw_mp3?aw_0_1st.playerid=radio-browser.info", format: "mp3" },
+            { name: "KFI AM 640 Los Angeles Local News & Talk", url: "https://stream.revma.ihrhls.com/zc177", format: "mp3" }
+        ]},
+        { label: "Smooth Jazz & LA Jazz", tag: "smooth jazz", searchName: "", curated: [
+            { name: "101 Smooth Jazz Mellow Mix", url: "http://jking.cdnstream1.com/b22139_128mp3", format: "mp3" },
+            { name: "KJAZZ 88.1 FM Los Angeles & Long Beach", url: "https://streaming.kkjz.org/kkjz-128.mp3", format: "mp3" },
+            { name: "WWOZ 90.7 FM Traditional & Classic Jazz", url: "https://wwoz-sc.streamguys1.com/wwoz-hi.mp3", format: "mp3" }
+        ]},
+        { label: "Big Band, Swing & Sinatra", tag: "big band", searchName: "", curated: [
+            { name: "Exclusively Frank Sinatra Standards", url: "https://2.mystreaming.net/er/franksinatra/icecast.audio", format: "mp3" },
+            { name: "Classic Vinyl HD Big Band & Crooners", url: "https://icecast.walmradio.com:8443/classic", format: "mp3" },
+            { name: "Instrumentals Forever Lush Orchestra", url: "http://quincy.torontocast.com:1910/stream", format: "mp3" }
+        ]},
+        { label: "Classic Country Legends", tag: "classic country", searchName: "", curated: [
+            { name: "181.FM Highway 181 (Classic Country Legends)", url: "http://listen.181fm.com/181-highway_128k.mp3", format: "mp3" },
+            { name: "1.FM Classic Country Radio", url: "http://strm112.1.fm/ccountry_mobile_mp3", format: "mp3" }
+        ]},
+        { label: "Classic Motown & 60s Soul", tag: "motown", searchName: "", curated: [
+            { name: "24/7 Motown Classics & Soul Legends", url: "http://stream.zeno.fm/49y7s0y32v8uv", format: "mp3" },
+            { name: "SomaFM Seven Inch Soul (60s Soul)", url: "https://ice6.somafm.com/7soul-128-mp3", format: "mp3" },
+            { name: "181.FM Classic Soul", url: "https://listen.181fm.com/181-soul_128k.mp3", format: "mp3" }
+        ]},
+        { label: "70s Soft Rock & Easy Listening", tag: "easy listening", searchName: "", curated: [
+            { name: "Left Coast 70s (Mellow 70s Soft Rock)", url: "https://ice2.somafm.com/seventies-320-mp3", format: "mp3" },
+            { name: "Gold Easy Listening & Timeless Hits", url: "https://media-ssl.musicradio.com/GoldMP3", format: "mp3" },
+            { name: "Instrumentals Forever Easy Listening", url: "http://quincy.torontocast.com:1910/stream", format: "mp3" }
+        ]},
+        { label: "Christmas Classics & Holiday", tag: "christmas", searchName: "", curated: [
+            { name: "181.FM Christmas Classics", url: "http://listen.181fm.com/181-xtraditional_128k.mp3", format: "mp3" },
+            { name: "Classical Christmas FM", url: "https://christmasfm.cdnstream1.com/2550_128.mp3?aw_0_1st.playerid=esPlayer&aw_0_1st.skey=1605423292", format: "mp3" },
+            { name: "1.FM Always Christmas Radio", url: "http://strm112.1.fm/christmas_mobile_mp3", format: "mp3" },
+            { name: "Sky Radio Christmas", url: "http://playerservices.streamtheworld.com/api/livestream-redirect/SRGSTR08.mp3", format: "mp3" }
+        ]}
     ]
 
-    m.currentVibeIndex = 0
-    m.currentStationList = []
-    m.currentStationIndex = 0
-    m.isMuted = false
-
-    ' Set up Timers, Texture Cleanup Observers, and Audio Observers
     m.slideshowTimer.ObserveField("fire", "onSlideshowTimerFire")
     m.toastTimer.ObserveField("fire", "onToastTimerFire")
     m.clockTimer.ObserveField("fire", "updateLivingRoomClock")
@@ -190,84 +98,57 @@ sub init()
     m.fadeBtoA.ObserveField("state", "onFadeBtoAState")
     m.posterA.ObserveField("loadStatus", "onPosterALoadStatus")
     m.posterB.ObserveField("loadStatus", "onPosterBLoadStatus")
+    m.heroAlbumPoster.ObserveField("loadStatus", "onAlbumArtLoadStatus")
+    m.overlayCloseAnim.ObserveField("state", "onOverlayCloseAnimState")
+    if m.voiceSearchBox <> invalid then m.voiceSearchBox.ObserveField("text", "onVoiceSearchTextChange")
 
-    ' Start Living-Room Clock & Date immediately
     updateLivingRoomClock()
     m.clockTimer.control = "start"
-
-    ' Discover all 200+ family photos in pkg:/images/
+    m.eqPulseAnim.control = "start"
     discoverPhotos()
-
-    ' Start playing Genre 1 immediately
     loadCurrentVibe()
 end sub
 
+function addNode(parent as Object, nodeType as String, fields as Object) as Object
+    n = CreateObject("roSGNode", nodeType)
+    if fields <> invalid then n.setFields(fields)
+    if parent <> invalid then parent.appendChild(n)
+    return n
+end function
+
 ' =============================================================================
-' BIG, FRIENDLY LIVING-ROOM CLOCK & DATE
+' LIVING-ROOM CLOCK & 200+ PHOTO SLIDESHOW ENGINE
 ' =============================================================================
 
 sub updateLivingRoomClock()
     dt = CreateObject("roDateTime")
     dt.ToLocalTime()
-
-    hour24 = dt.GetHours()
-    minute = dt.GetMinutes()
-
+    h24 = dt.GetHours()
+    mnt = dt.GetMinutes()
     ampm = "AM"
-    if hour24 >= 12
-        ampm = "PM"
-    end if
-
-    hour12 = hour24 mod 12
-    if hour12 = 0
-        hour12 = 12
-    end if
-
-    minStr = minute.ToStr()
-    if minute < 10
-        minStr = "0" + minStr
-    end if
-
-    m.clockTimeLabel.text = hour12.ToStr() + ":" + minStr + " " + ampm
-
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    monthIdx = dt.GetMonth() - 1
-    monthName = ""
-    if monthIdx >= 0 and monthIdx < months.Count()
-        monthName = months[monthIdx]
-    end if
-
-    m.clockDateLabel.text = dt.GetWeekday() + ", " + monthName + " " + dt.GetDayOfMonth().ToStr()
+    if h24 >= 12 then ampm = "PM"
+    h12 = h24 mod 12
+    if h12 = 0 then h12 = 12
+    minStr = mnt.ToStr()
+    if mnt < 10 then minStr = "0" + minStr
+    m.clockTimeLabel.text = h12.ToStr() + ":" + minStr + " " + ampm
+    months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    m.clockDateLabel.text = dt.GetWeekday() + ", " + months[dt.GetMonth() - 1] + " " + dt.GetDayOfMonth().ToStr()
 end sub
-
-' =============================================================================
-' 200+ PHOTO SLIDESHOW ENGINE WITH GPU TEXTURE MEMORY RECYCLING
-' =============================================================================
 
 sub discoverPhotos()
     m.orderedPhotos = []
     m.photos = []
     rawFiles = ListDir("pkg:/images/")
-
     if type(rawFiles) = "roList" or type(rawFiles) = "roArray"
-        ' Build sortable array with natural numeric sort keys so photo2.jpg comes before photo10.jpg and photo200.jpg
         sortableList = []
         for each fileName in rawFiles
-            lowerName = LCase(fileName)
-            isSystemAsset = (Left(lowerName, 8) = "channel_" or Left(lowerName, 7) = "splash_")
-            if not isSystemAsset
-                if Right(lowerName, 4) = ".jpg" or Right(lowerName, 5) = ".jpeg" or Right(lowerName, 4) = ".png"
-                    sortableList.Push({
-                        name: fileName,
-                        sortKey: makeNaturalSortKey(lowerName)
-                    })
-                end if
+            ln = LCase(fileName)
+            if Left(ln, 8) <> "channel_" and Left(ln, 7) <> "splash_" and (Right(ln, 4) = ".jpg" or Right(ln, 5) = ".jpeg" or Right(ln, 4) = ".png")
+                sortableList.Push({ name: fileName, sortKey: makeNaturalSortKey(ln) })
             end if
         end for
-
-        ' Sort using natural numeric order
         sortableList.SortBy("sortKey")
-
         for each entry in sortableList
             uri = "pkg:/images/" + entry.name
             m.orderedPhotos.Push(uri)
@@ -277,7 +158,6 @@ sub discoverPhotos()
 
     if m.photos.Count() = 0
         m.emptyStateGroup.visible = true
-        m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM"
         m.photoCounterLabel.text = "No Photos Found"
         m.slideshowTimer.control = "stop"
     else
@@ -289,14 +169,10 @@ sub discoverPhotos()
         m.posterB.uri = ""
         m.activePoster = "A"
         updatePhotoCounterHUD()
-
-        if m.photos.Count() > 1
-            m.slideshowTimer.control = "start"
-        end if
+        if m.photos.Count() > 1 then m.slideshowTimer.control = "start"
     end if
 end sub
 
-' Zero-pads embedded numbers in filenames so 1..200+ sort in true numerical order
 function makeNaturalSortKey(name as String) as String
     result = ""
     numBuf = ""
@@ -328,66 +204,44 @@ end function
 sub showPhotoAtIndex(newIndex as Integer)
     photoCount = m.photos.Count()
     if photoCount = 0 then return
-
-    ' Wrap index cleanly around album bounds (supports 200+ photos)
     while newIndex < 0
         newIndex = newIndex + photoCount
     end while
     while newIndex >= photoCount
         newIndex = newIndex - photoCount
     end while
-
     m.currentPhotoIndex = newIndex
     nextUri = m.photos[m.currentPhotoIndex]
-
-    ' Stop any in-flight crossfade animation before starting a new transition
     m.fadeAtoB.control = "stop"
     m.fadeBtoA.control = "stop"
 
     if m.activePoster = "A"
         m.pendingPoster = "B"
-        if m.posterB.uri = nextUri and m.posterB.loadStatus = "ready"
-            startCrossfadeToB()
-        else
-            m.posterB.uri = nextUri
-        end if
+        m.posterB.uri = nextUri
+        if m.posterB.loadStatus = "ready" then startCrossfadeToB()
     else
         m.pendingPoster = "A"
-        if m.posterA.uri = nextUri and m.posterA.loadStatus = "ready"
-            startCrossfadeToA()
-        else
-            m.posterA.uri = nextUri
-        end if
+        m.posterA.uri = nextUri
+        if m.posterA.loadStatus = "ready" then startCrossfadeToA()
     end if
-
     updatePhotoCounterHUD()
 end sub
 
 sub onPosterBLoadStatus()
     if m.pendingPoster <> "B" then return
-    status = m.posterB.loadStatus
-    if status = "ready"
+    if m.posterB.loadStatus = "ready"
         startCrossfadeToB()
-    else if status = "failed"
-        ' Skip unreadable photo automatically
-        m.pendingPoster = ""
-        if m.photos.Count() > 1
-            showPhotoAtIndex(m.currentPhotoIndex + 1)
-        end if
+    else if m.posterB.loadStatus = "failed" and m.photos.Count() > 1
+        showPhotoAtIndex(m.currentPhotoIndex + 1)
     end if
 end sub
 
 sub onPosterALoadStatus()
     if m.pendingPoster <> "A" then return
-    status = m.posterA.loadStatus
-    if status = "ready"
+    if m.posterA.loadStatus = "ready"
         startCrossfadeToA()
-    else if status = "failed"
-        ' Skip unreadable photo automatically
-        m.pendingPoster = ""
-        if m.photos.Count() > 1
-            showPhotoAtIndex(m.currentPhotoIndex + 1)
-        end if
+    else if m.posterA.loadStatus = "failed" and m.photos.Count() > 1
+        showPhotoAtIndex(m.currentPhotoIndex + 1)
     end if
 end sub
 
@@ -403,7 +257,6 @@ sub startCrossfadeToA()
     m.fadeBtoA.control = "start"
 end sub
 
-' Free the off-screen Poster texture from GPU RAM once crossfade finishes
 sub onFadeAtoBState()
     if m.fadeAtoB.state = "stopped" and m.activePoster = "B"
         m.posterA.opacity = 0.0
@@ -421,9 +274,7 @@ sub onFadeBtoAState()
 end sub
 
 sub onSlideshowTimerFire()
-    if not m.isSlideshowPaused and m.photos.Count() > 1
-        showPhotoAtIndex(m.currentPhotoIndex + 1)
-    end if
+    if not m.isSlideshowPaused and m.photos.Count() > 1 then showPhotoAtIndex(m.currentPhotoIndex + 1)
 end sub
 
 sub resetSlideshowTimer()
@@ -435,15 +286,12 @@ end sub
 
 sub toggleSlideshowPause()
     if m.photos.Count() = 0 then return
-
     m.isSlideshowPaused = not m.isSlideshowPaused
     if m.isSlideshowPaused
         m.slideshowTimer.control = "stop"
         showToast("PHOTO SLIDESHOW PAUSED", "Staying on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Press [Play] Anytime to Resume Slideshow")
     else
-        if m.photos.Count() > 1
-            m.slideshowTimer.control = "start"
-        end if
+        if m.photos.Count() > 1 then m.slideshowTimer.control = "start"
         showToast("PHOTO SLIDESHOW RESUMED", "Changing Photos Every 12 Seconds", "Use [Left / Right] for Next Photo or [Rew / FF] to Jump 10 Photos")
     end if
     updatePhotoCounterHUD()
@@ -451,28 +299,19 @@ end sub
 
 sub toggleShuffleMode()
     if m.orderedPhotos.Count() <= 1 then return
-
     currentUri = m.photos[m.currentPhotoIndex]
     m.isShuffleMode = not m.isShuffleMode
-
     if m.isShuffleMode
-        ' Build a Fisher-Yates shuffled copy, keeping the current photo first so the screen doesn't jump
         pool = []
         for each uri in m.orderedPhotos
-            if uri <> currentUri
-                pool.Push(uri)
-            end if
+            if uri <> currentUri then pool.Push(uri)
         end for
-
-        ' Fisher-Yates shuffle
-        n = pool.Count()
-        for i = n - 1 to 1 step -1
+        for i = pool.Count() - 1 to 1 step -1
             j = Rnd(i + 1) - 1
             tmp = pool[i]
             pool[i] = pool[j]
             pool[j] = tmp
         end for
-
         m.photos = [currentUri]
         for each uri in pool
             m.photos.Push(uri)
@@ -480,37 +319,24 @@ sub toggleShuffleMode()
         m.currentPhotoIndex = 0
         showToast("SHUFFLE MODE ON", "Showing Family Photos in Random Order", "Press [OK] Anytime to Return to Storybook Order")
     else
-        ' Restore natural Storybook chronological order and keep position on current photo
         m.photos = []
         foundIdx = 0
         for i = 0 to m.orderedPhotos.Count() - 1
             uri = m.orderedPhotos[i]
             m.photos.Push(uri)
-            if uri = currentUri
-                foundIdx = i
-            end if
+            if uri = currentUri then foundIdx = i
         end for
         m.currentPhotoIndex = foundIdx
         showToast("STORYBOOK ORDER ON", "Showing Family Photos in Numerical Order", "Press [OK] Anytime to Shuffle Photos")
     end if
-
     updatePhotoCounterHUD()
 end sub
 
 sub updatePhotoCounterHUD()
     total = m.photos.Count()
-    if total = 0
-        m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM"
-        m.photoCounterLabel.text = "No Photos Found"
-        m.photoSubLabel.text = ""
-        return
-    end if
-
+    if total = 0 then return
     modeText = "STORYBOOK ORDER"
-    if m.isShuffleMode
-        modeText = "SHUFFLE MODE"
-    end if
-
+    if m.isShuffleMode then modeText = "SHUFFLE MODE"
     if m.isSlideshowPaused
         m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM  •  PAUSED"
         m.photoCounterLabel.color = "0xFFD54FFF"
@@ -518,127 +344,72 @@ sub updatePhotoCounterHUD()
     else
         m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM  •  " + modeText
         m.photoCounterLabel.color = "0xFFFFFFFF"
-        m.photoSubLabel.text = "Auto-Advance: Every 12s"
+        m.photoSubLabel.text = "[Left/Right] Photo  •  [OK] Shuffle  •  [Play] Pause"
     end if
-
     m.photoCounterLabel.text = "Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + total.ToStr()
 end sub
 
 ' =============================================================================
-' ENDLESS LIVE RADIO (9 Genres + Instant Curated Streams + Radio Browser API)
+' LIVE RADIO & REAL-TIME ALBUM COVER ART ENGINE
 ' =============================================================================
 
 sub loadCurrentVibe()
     vibe = m.vibes[m.currentVibeIndex]
-    genreNum = (m.currentVibeIndex + 1).ToStr() + " OF " + m.vibes.Count().ToStr()
-
-    ' Immediately load the curated flagship streams so playback starts right away!
-    m.currentStationList = []
-    if vibe.DoesExist("curated") and type(vibe.curated) = "roArray"
-        for each s in vibe.curated
-            m.currentStationList.Push(s)
-        end for
-    end if
+    m.currentStationList = vibe.curated
     m.currentStationIndex = 0
+    playCurrentStation()
 
-    if m.currentStationList.Count() > 0
-        playCurrentStation()
-    else
-        m.radioPlayer.control = "stop"
-        m.radioHeaderLabel.text = "GENRE " + genreNum + "  •  " + UCase(vibe.label)
-        m.radioStatusLabel.text = "Tuning " + vibe.label + "..."
-        showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), "Tuning Live Radio...", "Press [UP / DOWN] to Change Genre   •   Press [ * ] for Next Station")
-    end if
-
-    ' Also run background RadioTask to append additional live backup stations from Radio Browser API
+    if m.radioTask <> invalid then m.radioTask.control = "stop"
     m.radioTask = CreateObject("roSGNode", "RadioTask")
     m.radioTask.searchTag = vibe.tag
-    if vibe.DoesExist("searchName")
-        m.radioTask.searchName = vibe.searchName
-    end if
-    m.radioTask.curatedStations = m.currentStationList
+    m.radioTask.searchName = vibe.searchName
+    m.radioTask.curatedStations = vibe.curated
     m.radioTask.ObserveField("status", "onRadioTaskStatus")
     m.radioTask.control = "RUN"
 end sub
 
 sub onRadioTaskStatus()
-    if m.radioTask = invalid then return
-    status = m.radioTask.status
-
-    if status = "ready"
-        wasEmpty = (m.currentStationList.Count() = 0)
-        m.currentStationList = m.radioTask.stations
-        if wasEmpty and m.currentStationList.Count() > 0
+    if m.radioTask = invalid or m.radioTask.status <> "ready" then return
+    stations = m.radioTask.stations
+    if type(stations) = "roArray" and stations.Count() > 0
+        m.currentStationList = stations
+        if m.radioPlayer.state = "error" or m.radioPlayer.state = "none"
             m.currentStationIndex = 0
             playCurrentStation()
+        else
+            updateRadioHUD()
         end if
-    else if status = "error" and m.currentStationList.Count() = 0
-        vibe = m.vibes[m.currentVibeIndex]
-        m.radioStatusLabel.text = "Unavailable (" + vibe.label + ") - Press Up/Down"
-        showToast("RADIO CONNECTION ISSUE", "Could not reach " + vibe.label, "Please press [UP] or [DOWN] to try another genre")
     end if
 end sub
 
 sub playCurrentStation()
+    if m.currentStationList = invalid or m.currentStationList.Count() = 0 then return
+    if m.currentStationIndex >= m.currentStationList.Count() then m.currentStationIndex = 0
+    station = m.currentStationList[m.currentStationIndex]
     vibe = m.vibes[m.currentVibeIndex]
     genreNum = (m.currentVibeIndex + 1).ToStr() + " OF " + m.vibes.Count().ToStr()
-
-    if m.currentStationList = invalid or m.currentStationList.Count() = 0
-        m.radioStatusLabel.text = "No working streams for " + vibe.label
-        return
-    end if
-
-    if m.currentStationIndex >= m.currentStationList.Count()
-        m.currentStationIndex = 0
-    end if
-
-    station = m.currentStationList[m.currentStationIndex]
-
     streamFormat = "mp3"
-    if station.DoesExist("format") and station.format <> ""
-        streamFormat = station.format
-    end if
+    if station.DoesExist("format") and station.format <> "" then streamFormat = station.format
 
     content = CreateObject("roSGNode", "ContentNode")
-    content.url = station.url
-    content.title = station.name
-    content.streamFormat = streamFormat
+    content.setFields({ url: station.url, title: station.name, streamFormat: streamFormat })
+    m.currentSongTitle = ""
+    m.activePlayingUrl = station.url
 
     m.radioPlayer.control = "stop"
     m.radioPlayer.content = content
     m.radioPlayer.mute = m.isMuted
     m.radioPlayer.control = "play"
-
+    requestAlbumArt(getDefaultArtQueryForStation(station.name, vibe.label))
     updateRadioHUD()
-    stationNumText = "Station " + (m.currentStationIndex + 1).ToStr() + " in Genre   •   Press [UP / DOWN] for Other Genres   •   Press [ * ] for Next Station"
-    showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), station.name, stationNumText)
-end sub
-
-sub nextStationInGenre()
-    if m.currentStationList = invalid or m.currentStationList.Count() <= 1
-        vibe = m.vibes[m.currentVibeIndex]
-        showToast(UCase(vibe.label), "Searching for more stations...", "Press [UP / DOWN] to switch between all 9 Radio Genres")
-        return
-    end if
-
-    m.currentStationIndex = m.currentStationIndex + 1
-    if m.currentStationIndex >= m.currentStationList.Count()
-        m.currentStationIndex = 0
-    end if
-    playCurrentStation()
+    showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), station.name, "Press [UP / DOWN] for Other Genres   •   Press [ * ] for 100 Stations & Voice Search")
 end sub
 
 sub onAudioStateChange()
     state = m.radioPlayer.state
-
-    if state = "error"
-        ' Automatically fall back to the next station in this genre if a stream fails
-        if m.currentStationList <> invalid and m.currentStationList.Count() > 1
-            m.currentStationIndex = m.currentStationIndex + 1
-            if m.currentStationIndex < m.currentStationList.Count()
-                playCurrentStation()
-            end if
-        end if
+    if state = "error" and m.currentStationList <> invalid and m.currentStationList.Count() > 1
+        m.currentStationIndex = m.currentStationIndex + 1
+        if m.currentStationIndex < m.currentStationList.Count() then playCurrentStation()
     else if state = "playing" or state = "buffering"
         updateRadioHUD()
     end if
@@ -647,99 +418,99 @@ end sub
 sub toggleMute()
     m.isMuted = not m.isMuted
     m.radioPlayer.mute = m.isMuted
-
     if m.isMuted
+        m.eqPulseAnim.control = "stop"
         showToast("RADIO AUDIO MUTED", "Music is Currently Muted", "Press [Replay] on Your Remote to Unmute Music")
     else
-        vibe = m.vibes[m.currentVibeIndex]
-        stationName = vibe.label
-        if m.currentStationList.Count() > m.currentStationIndex
-            stationName = m.currentStationList[m.currentStationIndex].name
-        end if
-        showToast("RADIO AUDIO UNMUTED", stationName, "Playing Live on " + vibe.label)
+        m.eqPulseAnim.control = "start"
+        showToast("RADIO AUDIO UNMUTED", m.radioStatusLabel.text, "Playing Live Radio")
     end if
-
     updateRadioHUD()
 end sub
 
 sub onTimedMetaData()
     meta = m.radioPlayer.timedMetaData
     if type(meta) <> "roAssociativeArray" then return
-
     songTitle = ""
     artistName = ""
+    for each k in ["title", "StreamTitle", "TIT2"]
+        if songTitle = "" and meta.DoesExist(k) and meta[k] <> invalid then songTitle = meta[k].ToStr().Trim()
+    end for
+    for each k in ["artist", "TPE1"]
+        if artistName = "" and meta.DoesExist(k) and meta[k] <> invalid then artistName = meta[k].ToStr().Trim()
+    end for
 
-    if meta.DoesExist("title") and meta.title <> invalid
-        songTitle = meta.title.ToStr().Trim()
-    else if meta.DoesExist("StreamTitle") and meta.StreamTitle <> invalid
-        songTitle = meta.StreamTitle.ToStr().Trim()
-    else if meta.DoesExist("TIT2") and meta.TIT2 <> invalid
-        songTitle = meta.TIT2.ToStr().Trim()
-    end if
-
-    if meta.DoesExist("artist") and meta.artist <> invalid
-        artistName = meta.artist.ToStr().Trim()
-    else if meta.DoesExist("TPE1") and meta.TPE1 <> invalid
-        artistName = meta.TPE1.ToStr().Trim()
-    end if
-
-    fullText = ""
-    if artistName <> "" and songTitle <> ""
-        fullText = artistName + " — " + songTitle
-    else if songTitle <> ""
-        fullText = songTitle
-    end if
-
-    ' Ignore empty or placeholder metadata
-    if fullText <> "" and fullText <> "-" and fullText <> " - "
+    fullText = songTitle
+    if artistName <> "" and songTitle <> "" then fullText = artistName + " — " + songTitle
+    if fullText <> "" and fullText <> "-" and fullText <> " - " and Instr(1, LCase(fullText), "commercial") = 0
         m.currentSongTitle = fullText
+        requestAlbumArt(fullText)
     else
         m.currentSongTitle = ""
     end if
-
     updateRadioHUD()
+end sub
+
+sub requestAlbumArt(query as String)
+    if query = "" or query = m.lastArtQuery then return
+    m.lastArtQuery = query
+    if m.artTask <> invalid then m.artTask.control = "stop"
+    m.artTask = CreateObject("roSGNode", "RadioTask")
+    m.artTask.functionName = "fetchArtwork"
+    m.artTask.artworkQuery = query
+    m.artTask.ObserveField("artworkUrl", "onArtworkUrlReady")
+    m.artTask.control = "RUN"
+end sub
+
+sub onArtworkUrlReady()
+    if m.artTask = invalid or m.artTask.artworkUrl = "" then return
+    artUrl = m.artTask.artworkUrl
+    m.hudAlbumPoster.uri = artUrl
+    m.heroAlbumPoster.uri = artUrl
+end sub
+
+sub onAlbumArtLoadStatus()
+    if m.heroAlbumPoster.loadStatus = "ready" then m.artPopAnim.control = "start"
 end sub
 
 sub updateRadioHUD()
     vibe = m.vibes[m.currentVibeIndex]
     genreNum = (m.currentVibeIndex + 1).ToStr() + " OF " + m.vibes.Count().ToStr()
     m.radioHeaderLabel.text = "GENRE " + genreNum + "  •  " + UCase(vibe.label)
-
     stationName = "Connecting..."
     if m.currentStationList <> invalid and m.currentStationList.Count() > m.currentStationIndex
         stationName = m.currentStationList[m.currentStationIndex].name
     end if
-
     statePrefix = ""
     if m.isMuted
         statePrefix = "[MUTED]  "
     else if m.radioPlayer.state = "buffering"
         statePrefix = "[Loading]  "
     end if
-
     m.radioStatusLabel.text = statePrefix + stationName
+    m.stationsNowPlayingLabel.text = stationName
 
     if m.currentSongTitle <> ""
-        m.nowPlayingLabel.text = "Now Playing: " + m.currentSongTitle
+        m.nowPlayingLabel.text = "Now Playing: " + m.currentSongTitle + "   •   [*] 100 Stations"
+        m.stationsSongLabel.text = m.currentSongTitle
     else
-        m.nowPlayingLabel.text = "Live Broadcast"
+        m.nowPlayingLabel.text = "Live Broadcast   •   Press [ * ] for 100 Stations & Voice Search"
+        m.stationsSongLabel.text = "Live Broadcast Stream"
     end if
 end sub
 
-' =============================================================================
-' TOAST BANNER HELPER
-' =============================================================================
-
 sub showToast(title as String, message as String, subText = "" as String)
+    if m.isStationsOpen then return
     m.toastTitleLabel.text = title
     m.toastMessageLabel.text = message
     if subText <> ""
         m.toastSubLabel.text = subText
     else
-        m.toastSubLabel.text = "Press [UP / DOWN] to Change Genre   •   Press [ * ] for Next Station in This Genre"
+        m.toastSubLabel.text = "Press [UP / DOWN] to Change Genre   •   Press [ * ] for 100 Stations"
     end if
     m.clockGroup.visible = false
     m.toastGroup.visible = true
+    m.toastSlideAnim.control = "start"
     m.toastTimer.control = "stop"
     m.toastTimer.control = "start"
 end sub
@@ -750,160 +521,28 @@ sub onToastTimerFire()
 end sub
 
 ' =============================================================================
-' GRANDPARENT-FRIENDLY REMOTE CONTROL MAPPING (onKeyEvent)
-' =============================================================================
-
-function onKeyEvent(key as String, press as Boolean) as Boolean
-    if not press then return false
-
-    ' If the Pandora-for-TV 100-Station Browser is open, handle its navigation
-    if m.isStationsOpen
-        return handleStationsKeyEvent(key)
-    end if
-
-    ' Left / Right: Previous / Next Family Photo (resets slideshow timer)
-    if key = "left"
-        if m.photos.Count() > 0
-            showPhotoAtIndex(m.currentPhotoIndex - 1)
-            resetSlideshowTimer()
-        end if
-        return true
-    else if key = "right"
-        if m.photos.Count() > 0
-            showPhotoAtIndex(m.currentPhotoIndex + 1)
-            resetSlideshowTimer()
-        end if
-        return true
-
-    ' Rewind (<<) / FastForward (>>): Jump Back / Forward 10 Photos (Great for 200+ photo albums!)
-    else if key = "rewind"
-        if m.photos.Count() > 0
-            showPhotoAtIndex(m.currentPhotoIndex - 10)
-            resetSlideshowTimer()
-            showToast("JUMPED BACK 10 PHOTOS", "Now on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Use [Left / Right] for Single Photos or [Rew / FF] to Jump 10")
-        end if
-        return true
-    else if key = "fastforward"
-        if m.photos.Count() > 0
-            showPhotoAtIndex(m.currentPhotoIndex + 10)
-            resetSlideshowTimer()
-            showToast("JUMPED AHEAD 10 PHOTOS", "Now on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Use [Left / Right] for Single Photos or [Rew / FF] to Jump 10")
-        end if
-        return true
-
-    ' Up / Down: Switch between the 10 Main Radio Genres
-    else if key = "up"
-        m.currentVibeIndex = m.currentVibeIndex - 1
-        if m.currentVibeIndex < 0
-            m.currentVibeIndex = m.vibes.Count() - 1
-        end if
-        loadCurrentVibe()
-        return true
-    else if key = "down"
-        m.currentVibeIndex = m.currentVibeIndex + 1
-        if m.currentVibeIndex >= m.vibes.Count()
-            m.currentVibeIndex = 0
-        end if
-        loadCurrentVibe()
-        return true
-
-    ' Star (*) / Options: Open Pandora-for-TV 100-Station Browser & Search
-    else if key = "options"
-        openStationsBrowser()
-        return true
-
-    ' OK: Toggle Shuffle vs. Storybook Order
-    else if key = "OK"
-        toggleShuffleMode()
-        return true
-
-    ' Play: Pause / Resume the Photo Slideshow
-    else if key = "play"
-        toggleSlideshowPause()
-        return true
-
-    ' Replay / InstantReplay: Mute / Unmute Radio Audio
-    else if key = "replay" or key = "instantreplay"
-        toggleMute()
-        return true
-    end if
-
-    return false
-end function
-
-' =============================================================================
-' PANDORA-FOR-TV 100-STATION BROWSER & SEARCH
+' POLISHED PANDORA-FOR-TV 100-STATION BROWSER, VOICE MIC & ANIMATIONS
 ' =============================================================================
 
 sub buildStationGridUI()
     m.stationCards = []
     colX = [80, 670, 1260]
-    rowY = [226, 454, 682]
-
+    rowY = [224, 452, 680]
     for i = 0 to 8
-        col = i mod 3
-        row = Int(i / 3)
-
-        cardGroup = CreateObject("roSGNode", "Group")
-        cardGroup.translation = [colX[col], rowY[row]]
-
-        border = CreateObject("roSGNode", "Rectangle")
-        border.width = 560
-        border.height = 204
-        border.color = "0x28354AFF"
-
-        bg = CreateObject("roSGNode", "Rectangle")
-        bg.translation = [5, 5]
-        bg.width = 550
-        bg.height = 194
-        bg.color = "0x101726FF"
-
-        accent = CreateObject("roSGNode", "Rectangle")
-        accent.translation = [5, 5]
-        accent.width = 16
-        accent.height = 194
-        accent.color = "0xFFD54FFF"
-
-        titleLbl = CreateObject("roSGNode", "Label")
-        titleLbl.translation = [36, 22]
-        titleLbl.width = 496
-        titleLbl.height = 96
-        titleLbl.font = "font:MediumBoldSystemFont"
-        titleLbl.color = "0xFFFFFFFF"
-        titleLbl.wrap = true
-
-        genreLbl = CreateObject("roSGNode", "Label")
-        genreLbl.translation = [36, 124]
-        genreLbl.width = 496
-        genreLbl.height = 36
-        genreLbl.font = "font:SmallBoldSystemFont"
-        genreLbl.color = "0x80DEEAFF"
-
-        playingLbl = CreateObject("roSGNode", "Label")
-        playingLbl.translation = [36, 160]
-        playingLbl.width = 496
-        playingLbl.height = 30
-        playingLbl.font = "font:SmallestBoldSystemFont"
-        playingLbl.color = "0xFFD54FFF"
-        playingLbl.text = ""
-
-        cardGroup.appendChild(border)
-        cardGroup.appendChild(bg)
-        cardGroup.appendChild(accent)
-        cardGroup.appendChild(titleLbl)
-        cardGroup.appendChild(genreLbl)
-        cardGroup.appendChild(playingLbl)
-        m.stationsGridGroup.appendChild(cardGroup)
-
-        m.stationCards.Push({
-            group: cardGroup,
-            border: border,
-            bg: bg,
-            accent: accent,
-            titleLbl: titleLbl,
-            genreLbl: genreLbl,
-            playingLbl: playingLbl
-        })
+        cx = colX[i mod 3]
+        ry = rowY[Int(i / 3)]
+        cardGroup = addNode(m.stationsGridGroup, "Group", { translation: [cx, ry], scaleRotateCenter: [280, 102] })
+        border = addNode(cardGroup, "Rectangle", { width: 560, height: 204, color: "0x243248FF" })
+        bg = addNode(cardGroup, "Rectangle", { translation: [4, 4], width: 552, height: 196, color: "0x101828FF" })
+        accent = addNode(cardGroup, "Rectangle", { translation: [4, 4], width: 16, height: 196, color: "0xFFD54FFF" })
+        numBadge = addNode(cardGroup, "Label", { translation: [34, 18], width: 496, height: 28, font: "font:SmallestBoldSystemFont", color: "0x80DEEAFF" })
+        titleLbl = addNode(cardGroup, "Label", { translation: [34, 48], width: 496, height: 92, font: "font:MediumBoldSystemFont", color: "0xFFFFFFFF", wrap: true })
+        playingLbl = addNode(cardGroup, "Label", { translation: [34, 154], width: 496, height: 30, font: "font:SmallestBoldSystemFont", color: "0x00E676FF", text: "" })
+        scaleAnim = addNode(cardGroup, "Animation", { duration: 0.18, easeFunction: "outQuad" })
+        scaleInterp = addNode(scaleAnim, "Vector2DFieldInterpolator", { key: [0.0, 1.0], keyValue: [[1.0, 1.0], [1.0, 1.0]], fieldToInterp: "" })
+        cardGroup.id = "stationCard_" + i.ToStr()
+        scaleInterp.fieldToInterp = cardGroup.id + ".scale"
+        m.stationCards.Push({ group: cardGroup, border: border, bg: bg, accent: accent, numBadge: numBadge, titleLbl: titleLbl, playingLbl: playingLbl, scaleAnim: scaleAnim, scaleInterp: scaleInterp, pos: [cx, ry], isScaled: false })
     end for
 end sub
 
@@ -911,78 +550,108 @@ sub openStationsBrowser()
     m.isStationsOpen = true
     m.toastGroup.visible = false
     m.stationsOverlay.visible = true
-
     if m.filteredStations.Count() > 0
         m.stationsFocusArea = "grid"
     else
         m.stationsFocusArea = "search"
         m.stationsTopFocusIdx = 0
     end if
-
-    renderStationsGrid()
+    syncVoiceSearchFocus()
+    renderStationsGrid(false, 0)
+    m.overlayOpenAnim.control = "start"
 end sub
 
 sub closeStationsBrowser()
-    m.isStationsOpen = false
-    m.stationsOverlay.visible = false
-    m.clockGroup.visible = true
+    if m.voiceSearchBox <> invalid then m.voiceSearchBox.active = false
     m.top.setFocus(true)
+    m.overlayCloseAnim.control = "start"
 end sub
 
-sub renderStationsGrid()
-    total = m.filteredStations.Count()
+sub onOverlayCloseAnimState()
+    if m.overlayCloseAnim.state = "stopped"
+        m.isStationsOpen = false
+        m.stationsOverlay.visible = false
+        m.clockGroup.visible = true
+        m.top.setFocus(true)
+    end if
+end sub
 
+sub syncVoiceSearchFocus()
+    if m.voiceSearchBox = invalid then return
+    if m.isStationsOpen and m.stationsFocusArea = "search" and m.stationsTopFocusIdx = 0
+        m.voiceSearchBox.active = true
+        m.voiceSearchBox.setFocus(true)
+        m.searchScaleInterp.keyValue = [[1.0, 1.0], [1.028, 1.028]]
+        m.searchFocusAnim.control = "start"
+    else
+        m.voiceSearchBox.active = false
+        m.top.setFocus(true)
+        m.searchScaleInterp.keyValue = [m.searchBoxGroup.scale, [1.0, 1.0]]
+        m.searchFocusAnim.control = "start"
+    end if
+end sub
+
+sub onVoiceSearchTextChange()
+    if m.ignoringVoiceEvent or m.voiceSearchBox = invalid or not m.isStationsOpen then return
+    newText = m.voiceSearchBox.text
+    if newText <> m.stationsSearchQuery
+        filterStationsByQuery(newText)
+        renderStationsGrid(true, 1)
+    end if
+end sub
+
+sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
+    total = m.filteredStations.Count()
     if m.stationsSearchQuery <> ""
         m.stationsHeaderTitle.text = "SEARCH: " + UCase(m.stationsSearchQuery) + "  (" + total.ToStr() + ")"
-        m.searchBoxLabel.text = "Search: " + m.stationsSearchQuery + "   (Press OK to Change)"
+        m.searchBoxLabel.text = "Voice / Search: " + m.stationsSearchQuery + "   (Speak or Press OK)"
         m.searchBoxLabel.color = "0xFFFFFFFF"
     else
-        m.stationsHeaderTitle.text = "FAMILY RADIO  •  " + total.ToStr() + " STATIONS"
-        m.searchBoxLabel.text = "Search 100 Stations (Press OK to Type)..."
+        m.stationsHeaderTitle.text = "PANDORA RADIO  •  " + total.ToStr() + " STATIONS"
+        m.searchBoxLabel.text = "Speak into Remote Mic or Press OK to Search..."
         m.searchBoxLabel.color = "0xB0BEC5FF"
     end if
 
-    ' Update Now Playing header
-    m.stationsNowPlayingLabel.text = "Now Playing: " + m.radioStatusLabel.text
-
-    ' Top Search Row Focus Highlights
     m.searchBoxBorder.color = "0x28354AFF"
     m.searchBoxBg.color = "0x111A2BFF"
+    m.micBadgeBg.color = "0x1E88E5FF"
     m.showAllBtnBorder.color = "0x28354AFF"
     m.showAllBtnBg.color = "0x111A2BFF"
-    m.closeStationsBtnBorder.color = "0x28354AFF"
-    m.closeStationsBtnBg.color = "0x111A2BFF"
-
     if m.stationsFocusArea = "search"
         if m.stationsTopFocusIdx = 0
             m.searchBoxBorder.color = "0xFFD54FFF"
-            m.searchBoxBg.color = "0x1B2840FF"
-        else if m.stationsTopFocusIdx = 1
-            m.showAllBtnBorder.color = "0xFFD54FFF"
-            m.showAllBtnBg.color = "0x1B2840FF"
+            m.searchBoxBg.color = "0x1B2B48FF"
+            m.micBadgeBg.color = "0x00E676FF"
         else
-            m.closeStationsBtnBorder.color = "0xFFD54FFF"
-            m.closeStationsBtnBg.color = "0x1B2840FF"
+            m.showAllBtnBorder.color = "0xFFD54FFF"
+            m.showAllBtnBg.color = "0x1B2B48FF"
         end if
     end if
 
     if total = 0
         m.stationsEmptyLabel.visible = true
+        m.gridFocusRing.visible = false
         for i = 0 to 8
             m.stationCards[i].group.visible = false
         end for
-        m.stationsPageLabel.text = "0 Stations Found   •   Move Right to 'Show All 100' or Press [Back] to Return to Photos"
+        m.stationsPageLabel.text = "0 Stations Found   •   Move Right to 'Show All 100' or Press [ * ] to Return to Photos"
         return
     end if
 
     m.stationsEmptyLabel.visible = false
-
     if m.stationsSelectedIdx < 0 then m.stationsSelectedIdx = 0
     if m.stationsSelectedIdx >= total then m.stationsSelectedIdx = total - 1
 
     pageStart = Int(m.stationsSelectedIdx / 9) * 9
     pageEnd = pageStart + 8
     if pageEnd >= total then pageEnd = total - 1
+    if pageDir <> 0 or pageStart <> m.lastPageStart
+        offsetX = 36
+        if pageDir < 0 or pageStart < m.lastPageStart then offsetX = -36
+        m.pageSlideInterp.keyValue = [[offsetX, 0], [0, 0]]
+        m.pageSlideAnim.control = "start"
+        m.lastPageStart = pageStart
+    end if
 
     for i = 0 to 8
         idx = pageStart + i
@@ -990,145 +659,179 @@ sub renderStationsGrid()
         if idx < total
             st = m.filteredStations[idx]
             card.group.visible = true
-            card.titleLbl.text = (idx + 1).ToStr() + ". " + st.name
-            card.genreLbl.text = st.genre
+            card.numBadge.text = "STATION " + (idx + 1).ToStr() + "  •  " + UCase(st.genre)
+            card.titleLbl.text = st.name
             card.accent.color = st.color
-
             if st.url = m.activePlayingUrl
-                card.playingLbl.text = "NOW PLAYING"
+                card.playingLbl.text = "● NOW PLAYING LIVE"
+                card.playingLbl.color = "0x00E676FF"
             else
-                card.playingLbl.text = ""
+                card.playingLbl.text = "Press [OK] to Listen"
+                card.playingLbl.color = "0x78909CFF"
             end if
 
-            if m.stationsFocusArea = "grid" and idx = m.stationsSelectedIdx
+            isCardFocused = (m.stationsFocusArea = "grid" and idx = m.stationsSelectedIdx)
+            if isCardFocused
                 card.border.color = "0xFFD54FFF"
-                card.bg.color = "0x1A263EFF"
+                card.bg.color = "0x1A2942FF"
+                if not card.isScaled
+                    card.scaleInterp.keyValue = [card.group.scale, [1.036, 1.036]]
+                    card.scaleAnim.control = "start"
+                    card.isScaled = true
+                end if
+                if animateFocus
+                    m.focusMoveInterp.keyValue = [m.gridFocusRing.translation, card.pos]
+                    m.focusMoveAnim.control = "start"
+                else
+                    m.gridFocusRing.translation = card.pos
+                end if
             else
-                card.border.color = "0x28354AFF"
-                card.bg.color = "0x101726FF"
+                card.border.color = "0x243248FF"
+                card.bg.color = "0x101828FF"
+                if card.isScaled
+                    card.scaleInterp.keyValue = [card.group.scale, [1.0, 1.0]]
+                    card.scaleAnim.control = "start"
+                    card.isScaled = false
+                end if
             end if
         else
             card.group.visible = false
         end if
     end for
 
-    m.stationsPageLabel.text = "Showing " + (pageStart + 1).ToStr() + " - " + (pageEnd + 1).ToStr() + " of " + total.ToStr() + "   •   [UP] at Top Row = Search   •   [Rew/FF] Page   •   [OK] Play   •   [Back] Photos"
+    m.gridFocusRing.visible = (m.stationsFocusArea = "grid")
+    m.stationsPageLabel.text = "Stations " + (pageStart + 1).ToStr() + "-" + (pageEnd + 1).ToStr() + " of " + total.ToStr() + "   •   [UP] at Top Row = Mic Search   •   [OK] Play   •   [Rew/FF] Page   •   [ * ] Back to Photos"
 end sub
+
+function onKeyEvent(key as String, press as Boolean) as Boolean
+    if not press then return false
+    if m.isStationsOpen then return handleStationsKeyEvent(key)
+
+    if key = "left" and m.photos.Count() > 0
+        showPhotoAtIndex(m.currentPhotoIndex - 1)
+        resetSlideshowTimer()
+        return true
+    else if key = "right" and m.photos.Count() > 0
+        showPhotoAtIndex(m.currentPhotoIndex + 1)
+        resetSlideshowTimer()
+        return true
+    else if key = "rewind" and m.photos.Count() > 0
+        showPhotoAtIndex(m.currentPhotoIndex - 10)
+        resetSlideshowTimer()
+        showToast("JUMPED BACK 10 PHOTOS", "Now on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Use [Left / Right] for Single Photos or [Rew / FF] to Jump 10")
+        return true
+    else if key = "fastforward" and m.photos.Count() > 0
+        showPhotoAtIndex(m.currentPhotoIndex + 10)
+        resetSlideshowTimer()
+        showToast("JUMPED AHEAD 10 PHOTOS", "Now on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Use [Left / Right] for Single Photos or [Rew / FF] to Jump 10")
+        return true
+    else if key = "up"
+        m.currentVibeIndex = (m.currentVibeIndex - 1 + m.vibes.Count()) mod m.vibes.Count()
+        loadCurrentVibe()
+        return true
+    else if key = "down"
+        m.currentVibeIndex = (m.currentVibeIndex + 1) mod m.vibes.Count()
+        loadCurrentVibe()
+        return true
+    else if key = "options"
+        openStationsBrowser()
+        return true
+    else if key = "OK"
+        toggleShuffleMode()
+        return true
+    else if key = "play"
+        toggleSlideshowPause()
+        return true
+    else if key = "replay" or key = "instantreplay"
+        toggleMute()
+        return true
+    end if
+    return false
+end function
 
 function handleStationsKeyEvent(key as String) as Boolean
     total = m.filteredStations.Count()
-
-    if key = "back" or key = "options"
+    if key = "options" or key = "back"
         closeStationsBrowser()
+        return true
+    else if key = "replay" or key = "instantreplay"
+        toggleMute()
         return true
     end if
 
     if m.stationsFocusArea = "search"
-        if key = "left"
-            if m.stationsTopFocusIdx > 0
-                m.stationsTopFocusIdx = m.stationsTopFocusIdx - 1
-            end if
-            renderStationsGrid()
-            return true
-        else if key = "right"
-            if m.stationsTopFocusIdx < 2
-                m.stationsTopFocusIdx = m.stationsTopFocusIdx + 1
-            end if
-            renderStationsGrid()
-            return true
-        else if key = "down"
-            if total > 0
-                m.stationsFocusArea = "grid"
-                renderStationsGrid()
-            end if
-            return true
+        if key = "left" and m.stationsTopFocusIdx > 0
+            m.stationsTopFocusIdx = 0
+            syncVoiceSearchFocus()
+            renderStationsGrid(false, 0)
+        else if key = "right" and m.stationsTopFocusIdx < 1
+            m.stationsTopFocusIdx = 1
+            syncVoiceSearchFocus()
+            renderStationsGrid(false, 0)
+        else if key = "down" and total > 0
+            m.stationsFocusArea = "grid"
+            syncVoiceSearchFocus()
+            renderStationsGrid(true, 0)
         else if key = "OK"
             if m.stationsTopFocusIdx = 0
                 openStationSearchDialog()
-            else if m.stationsTopFocusIdx = 1
-                filterStationsByQuery("")
-                if m.filteredStations.Count() > 0
-                    m.stationsFocusArea = "grid"
-                end if
-                renderStationsGrid()
             else
-                closeStationsBrowser()
+                filterStationsByQuery("")
+                m.stationsFocusArea = "grid"
+                syncVoiceSearchFocus()
+                renderStationsGrid(true, -1)
             end if
-            return true
         end if
         return true
     end if
 
-    ' Grid Navigation (3 columns x 3 rows per page)
-    if key = "left"
-        if m.stationsSelectedIdx > 0
-            m.stationsSelectedIdx = m.stationsSelectedIdx - 1
-            renderStationsGrid()
-        end if
-        return true
-    else if key = "right"
-        if m.stationsSelectedIdx < total - 1
-            m.stationsSelectedIdx = m.stationsSelectedIdx + 1
-            renderStationsGrid()
-        end if
-        return true
+    if key = "left" and m.stationsSelectedIdx > 0
+        m.stationsSelectedIdx = m.stationsSelectedIdx - 1
+        renderStationsGrid(true, 0)
+    else if key = "right" and m.stationsSelectedIdx < total - 1
+        m.stationsSelectedIdx = m.stationsSelectedIdx + 1
+        renderStationsGrid(true, 0)
     else if key = "up"
-        idxInPage = m.stationsSelectedIdx mod 9
-        if idxInPage < 3
-            ' Top row of current page -> jump straight up to Search Box!
+        if (m.stationsSelectedIdx mod 9) < 3
             m.stationsFocusArea = "search"
             m.stationsTopFocusIdx = 0
-            renderStationsGrid()
+            syncVoiceSearchFocus()
+            renderStationsGrid(false, 0)
         else
             m.stationsSelectedIdx = m.stationsSelectedIdx - 3
-            renderStationsGrid()
+            renderStationsGrid(true, 0)
         end if
-        return true
     else if key = "down"
         if m.stationsSelectedIdx + 3 < total
             m.stationsSelectedIdx = m.stationsSelectedIdx + 3
         else if m.stationsSelectedIdx < total - 1
             m.stationsSelectedIdx = total - 1
         end if
-        renderStationsGrid()
-        return true
+        renderStationsGrid(true, 0)
     else if key = "rewind"
         m.stationsSelectedIdx = m.stationsSelectedIdx - 9
         if m.stationsSelectedIdx < 0 then m.stationsSelectedIdx = 0
-        renderStationsGrid()
-        return true
+        renderStationsGrid(false, -1)
     else if key = "fastforward"
         m.stationsSelectedIdx = m.stationsSelectedIdx + 9
         if m.stationsSelectedIdx >= total then m.stationsSelectedIdx = total - 1
-        renderStationsGrid()
-        return true
-    else if key = "OK"
-        if total > 0
-            playStationFromCatalog(m.filteredStations[m.stationsSelectedIdx])
-            renderStationsGrid()
-        end if
-        return true
+        renderStationsGrid(false, 1)
+    else if key = "OK" and total > 0
+        playStationFromCatalog(m.filteredStations[m.stationsSelectedIdx])
+        renderStationsGrid(false, 0)
     end if
-
     return true
 end function
 
 sub playStationFromCatalog(st as Object)
     streamFormat = "mp3"
-    if st.DoesExist("format") and st.format <> ""
-        streamFormat = st.format
-    end if
-
+    if st.DoesExist("format") and st.format <> "" then streamFormat = st.format
     content = CreateObject("roSGNode", "ContentNode")
-    content.url = st.url
-    content.title = st.name
-    content.streamFormat = streamFormat
-
+    content.setFields({ url: st.url, title: st.name, streamFormat: streamFormat })
     m.currentSongTitle = ""
     m.activePlayingUrl = st.url
     m.currentStationList = [st]
     m.currentStationIndex = 0
-
     m.radioPlayer.control = "stop"
     m.radioPlayer.content = content
     m.radioPlayer.mute = m.isMuted
@@ -1136,15 +839,20 @@ sub playStationFromCatalog(st as Object)
 
     m.radioHeaderLabel.text = "100-STATION BROWSER  •  " + UCase(st.genre)
     m.radioStatusLabel.text = st.name
-    m.nowPlayingLabel.text = "Live Broadcast"
+    m.nowPlayingLabel.text = "Live Broadcast   •   Press [ * ] for 100 Stations"
+    m.stationsNowPlayingLabel.text = st.name
+    m.stationsSongLabel.text = "Connecting Live Stream..."
+    m.stationsGenreLabel.text = st.genre
+    requestAlbumArt(getDefaultArtQueryForStation(st.name, st.genre))
 end sub
 
 sub openStationSearchDialog()
     dlg = CreateObject("roSGNode", "KeyboardDialog")
-    dlg.title = "Search 100 Radio Stations"
-    dlg.message = ["Type a station name or music style (example: K-LOVE, Sinatra, Jazz, News, Christmas)"]
+    dlg.title = "Voice or Text Search (100 Stations)"
+    dlg.message = ["Hold the Mic button on your Roku Remote to speak, or type a station/artist (K-LOVE, Sinatra, Jazz, News, Christmas):"]
     dlg.text = m.stationsSearchQuery
     dlg.buttons = ["Search", "Show All 100", "Cancel"]
+    if dlg.keyboard <> invalid then dlg.keyboard.voiceEnabled = true
     dlg.ObserveField("buttonSelected", "onSearchDialogButton")
     m.searchDialog = dlg
     m.top.getScene().dialog = dlg
@@ -1156,36 +864,33 @@ sub onSearchDialogButton()
     query = m.searchDialog.text
     m.searchDialog.close = true
     m.searchDialog = invalid
-
     if btn = 0
         filterStationsByQuery(query)
-        if m.filteredStations.Count() > 0
-            m.stationsFocusArea = "grid"
-        end if
-        renderStationsGrid()
+        if m.filteredStations.Count() > 0 then m.stationsFocusArea = "grid"
     else if btn = 1
         filterStationsByQuery("")
         m.stationsFocusArea = "grid"
-        renderStationsGrid()
     end if
+    syncVoiceSearchFocus()
+    renderStationsGrid(true, 1)
 end sub
 
 sub filterStationsByQuery(query as String)
     cleanQ = LCase(query.Trim())
     m.stationsSearchQuery = query.Trim()
     m.stationsSelectedIdx = 0
-
+    if m.voiceSearchBox <> invalid
+        m.ignoringVoiceEvent = true
+        m.voiceSearchBox.text = m.stationsSearchQuery
+        m.ignoringVoiceEvent = false
+    end if
     if cleanQ = ""
         m.filteredStations = m.allStations
         return
     end if
-
     matches = []
     for each st in m.allStations
-        haystack = LCase(st.name + " " + st.genre)
-        if Instr(1, haystack, cleanQ) > 0
-            matches.Push(st)
-        end if
+        if Instr(1, LCase(st.name + " " + st.genre), cleanQ) > 0 then matches.Push(st)
     end for
     m.filteredStations = matches
 end sub

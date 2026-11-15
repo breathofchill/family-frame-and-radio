@@ -4,423 +4,184 @@
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
 
     <children>
-        <!-- Solid Deep Charcoal Background (1920x1080) -->
-        <Rectangle
-            id="background"
-            width="1920"
-            height="1080"
-            color="0x0A0C10FF" />
+        <!-- Solid Deep Charcoal Background & Dual 1080p Photo Posters -->
+        <Rectangle id="background" width="1920" height="1080" color="0x0A0C10FF" />
+        <Poster id="posterA" width="1920" height="1080" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToFit" opacity="1.0" />
+        <Poster id="posterB" width="1920" height="1080" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToFit" opacity="0.0" />
 
-        <!-- Dual Full-Screen Photo Posters with Strict 1080p Texture Caps for 200+ Photo Stability -->
-        <Poster
-            id="posterA"
-            width="1920"
-            height="1080"
-            loadWidth="1920"
-            loadHeight="1080"
-            loadDisplayMode="scaleToFit"
-            opacity="1.0" />
-
-        <Poster
-            id="posterB"
-            width="1920"
-            height="1080"
-            loadWidth="1920"
-            loadHeight="1080"
-            loadDisplayMode="scaleToFit"
-            opacity="0.0" />
-
-        <!-- Smooth 1.5s Crossfade Animation: Poster A -> Poster B -->
-        <Animation
-            id="fadeAtoB"
-            duration="1.5"
-            easeFunction="linear">
-            <FloatFieldInterpolator
-                id="interpAOut"
-                key="[0.0, 1.0]"
-                keyValue="[1.0, 0.0]"
-                fieldToInterp="posterA.opacity" />
-            <FloatFieldInterpolator
-                id="interpBIn"
-                key="[0.0, 1.0]"
-                keyValue="[0.0, 1.0]"
-                fieldToInterp="posterB.opacity" />
+        <!-- Smooth 1.5s Photo Crossfade Animations -->
+        <Animation id="fadeAtoB" duration="1.5" easeFunction="linear">
+            <FloatFieldInterpolator id="interpAOut" key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="posterA.opacity" />
+            <FloatFieldInterpolator id="interpBIn" key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="posterB.opacity" />
+        </Animation>
+        <Animation id="fadeBtoA" duration="1.5" easeFunction="linear">
+            <FloatFieldInterpolator id="interpBOut" key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="posterB.opacity" />
+            <FloatFieldInterpolator id="interpAIn" key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="posterA.opacity" />
         </Animation>
 
-        <!-- Smooth 1.5s Crossfade Animation: Poster B -> Poster A -->
-        <Animation
-            id="fadeBtoA"
-            duration="1.5"
-            easeFunction="linear">
-            <FloatFieldInterpolator
-                id="interpBOut"
-                key="[0.0, 1.0]"
-                keyValue="[1.0, 0.0]"
-                fieldToInterp="posterB.opacity" />
-            <FloatFieldInterpolator
-                id="interpAIn"
-                key="[0.0, 1.0]"
-                keyValue="[0.0, 1.0]"
-                fieldToInterp="posterA.opacity" />
-        </Animation>
-
-        <!-- Fallback Empty Folder Notice (Shown only if pkg:/images/ has no family photos) -->
+        <!-- Empty Photo Folder Notice -->
         <Group id="emptyStateGroup" visible="false">
-            <Rectangle
-                translation="[210, 260]"
-                width="1500"
-                height="420"
-                color="0xFFD54FFF" />
-            <Rectangle
-                translation="[216, 266]"
-                width="1488"
-                height="408"
-                color="0x10141DF5" />
-            <Label
-                id="emptyTitleLabel"
-                translation="[260, 315]"
-                width="1400"
-                height="70"
-                font="font:LargeBoldSystemFont"
-                color="0xFFD54FFF"
-                horizAlign="center"
-                text="Welcome to Family Frame &amp; Radio" />
-            <Label
-                id="emptyBodyLabel"
-                translation="[260, 405]"
-                width="1400"
-                height="150"
-                font="font:MediumBoldSystemFont"
-                color="0xFFFFFFFF"
-                horizAlign="center"
-                wrap="true"
-                text="Your live radio is playing below! To add 200+ family photos, drop .jpg or .png photos into the images/ folder, re-zip, and sideload." />
-            <Label
-                id="emptyHintLabel"
-                translation="[260, 575]"
-                width="1400"
-                height="60"
-                font="font:MediumSystemFont"
-                color="0x80DEEAFF"
-                horizAlign="center"
-                text="Press UP or DOWN on your remote anytime to change the radio genre!" />
+            <Rectangle translation="[210, 260]" width="1500" height="420" color="0xFFD54FFF" />
+            <Rectangle translation="[216, 266]" width="1488" height="408" color="0x10141DF5" />
+            <Label id="emptyTitleLabel" translation="[260, 315]" width="1400" height="70" font="font:LargeBoldSystemFont" color="0xFFD54FFF" horizAlign="center" text="Welcome to Family Frame &amp; Radio" />
+            <Label id="emptyBodyLabel" translation="[260, 405]" width="1400" height="150" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" wrap="true" text="Your live radio is playing below! To add 200+ family photos, drop .jpg, .jpeg, or .png photos into the images/ folder, re-zip, and sideload." />
+            <Label id="emptyHintLabel" translation="[260, 575]" width="1400" height="60" font="font:MediumSystemFont" color="0x80DEEAFF" horizAlign="center" text="Press [ * ] for 100 Radio Stations &amp; Voice Search, or [UP / DOWN] to Change Genres!" />
         </Group>
 
-        <!-- Big, Friendly Living-Room Clock & Date (Top-Right Corner) -->
-        <Group id="clockGroup" translation="[1484, 34]">
-            <Rectangle
-                width="392"
-                height="112"
-                color="0xFFD54FFF" />
-            <Rectangle
-                translation="[4, 4]"
-                width="384"
-                height="104"
-                color="0x0B0E17DE" />
-            <Label
-                id="clockTimeLabel"
-                translation="[18, 12]"
-                width="348"
-                height="54"
-                font="font:LargeBoldSystemFont"
-                color="0xFFFFFFFF"
-                horizAlign="right"
-                text="12:00 PM" />
-            <Label
-                id="clockDateLabel"
-                translation="[18, 66]"
-                width="348"
-                height="32"
-                font="font:SmallBoldSystemFont"
-                color="0xFFD54FFF"
-                horizAlign="right"
-                text="Saturday, Nov 14" />
+        <!-- Top-Right Living-Room Clock & Date -->
+        <Group id="clockGroup" translation="[1496, 30]">
+            <Rectangle width="380" height="104" color="0xFFD54FFF" />
+            <Rectangle translation="[4, 4]" width="372" height="96" color="0x0B0E17DE" />
+            <Label id="clockTimeLabel" translation="[16, 10]" width="340" height="50" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" horizAlign="right" text="12:00 PM" />
+            <Label id="clockDateLabel" translation="[16, 62]" width="340" height="30" font="font:SmallBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="Saturday, Nov 14" />
         </Group>
 
-        <!-- Grandparent-Friendly Top Radio Dial Banner (Appears on Genre/Station Change) -->
-        <Group id="toastGroup" translation="[260, 44]" visible="false">
-            <!-- Outer Gold Frame -->
-            <Rectangle
-                width="1400"
-                height="174"
-                color="0xFFD54FFF" />
-            <!-- High-Contrast Dark Interior -->
-            <Rectangle
-                translation="[6, 6]"
-                width="1388"
-                height="162"
-                color="0x0B0E17F4" />
-            <!-- Line 1: Genre Number & Category -->
-            <Label
-                id="toastTitleLabel"
-                translation="[40, 20]"
-                width="1320"
-                height="44"
-                font="font:MediumBoldSystemFont"
-                color="0xFFD54FFF"
-                horizAlign="center"
-                text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
-            <!-- Line 2: Extra-Large Station Name -->
-            <Label
-                id="toastMessageLabel"
-                translation="[40, 68]"
-                width="1320"
-                height="54"
-                font="font:LargeBoldSystemFont"
-                color="0xFFFFFFFF"
-                horizAlign="center"
-                text="100.3 K-LOVE Los Angeles" />
-            <!-- Line 3: Gentle Sub-Hint -->
-            <Label
-                id="toastSubLabel"
-                translation="[40, 126]"
-                width="1320"
-                height="34"
-                font="font:SmallestBoldSystemFont"
-                color="0xB0BEC5FF"
-                horizAlign="center"
-                text="Press [UP / DOWN] to Change Genre   •   Press [ * ] for Next Station in This Genre" />
+        <!-- Animated Top Radio Toast Banner -->
+        <Group id="toastGroup" translation="[260, 36]" visible="false" opacity="0.0">
+            <Rectangle width="1400" height="166" color="0xFFD54FFF" />
+            <Rectangle translation="[5, 5]" width="1390" height="156" color="0x0B0E17F4" />
+            <Label id="toastTitleLabel" translation="[40, 16]" width="1320" height="40" font="font:MediumBoldSystemFont" color="0xFFD54FFF" horizAlign="center" text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
+            <Label id="toastMessageLabel" translation="[40, 62]" width="1320" height="52" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="100.3 K-LOVE Los Angeles" />
+            <Label id="toastSubLabel" translation="[40, 118]" width="1320" height="32" font="font:SmallestBoldSystemFont" color="0xB0BEC5FF" horizAlign="center" text="Press [UP / DOWN] to Change Genre   •   Press [ * ] to Browse &amp; Search All 100 Stations" />
         </Group>
+        <Animation id="toastSlideAnim" duration="0.26" easeFunction="outCubic">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="toastGroup.opacity" />
+            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[260, 8], [260, 36]]" fieldToInterp="toastGroup.translation" />
+        </Animation>
 
-        <!-- Accessible High-Contrast Bottom HUD Bar (10-Foot Grandparent Design) -->
-        <Group id="hudGroup" translation="[0, 884]">
-            <!-- Deep High-Contrast Bar Background -->
-            <Rectangle
-                width="1920"
-                height="196"
-                color="0x080B11E8" />
-            <!-- Warm Gold Top Accent Strip -->
-            <Rectangle
-                width="1920"
-                height="6"
-                color="0xFFD54FFF" />
+        <!-- Compact, Sleek Screensaver Bottom Bar (128px Tall) with Live Album Cover -->
+        <Group id="hudGroup" translation="[0, 952]">
+            <Rectangle width="1920" height="128" color="0x080B11EB" />
+            <Rectangle width="1920" height="4" color="0xFFD54FFF" />
 
-            <!-- Left Section: Family Photo Album Counter & Order Mode -->
-            <Label
-                id="photoHeaderLabel"
-                translation="[56, 16]"
-                width="620"
-                height="32"
-                font="font:SmallestBoldSystemFont"
-                color="0xFFD54FFF"
-                horizAlign="left"
-                text="FAMILY PHOTO ALBUM  •  STORYBOOK ORDER" />
-            <Label
-                id="photoCounterLabel"
-                translation="[56, 46]"
-                width="620"
-                height="52"
-                font="font:LargeBoldSystemFont"
-                color="0xFFFFFFFF"
-                horizAlign="left"
-                text="Photo 1 of 1" />
-            <Label
-                id="photoSubLabel"
-                translation="[56, 98]"
-                width="620"
-                height="32"
-                font="font:SmallBoldSystemFont"
-                color="0xB0BEC5FF"
-                horizAlign="left"
-                text="Auto-Advance: Every 12s" />
+            <!-- Left: Photo Counter & Mode -->
+            <Label id="photoHeaderLabel" translation="[48, 12]" width="560" height="26" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="FAMILY PHOTO ALBUM  •  STORYBOOK ORDER" />
+            <Label id="photoCounterLabel" translation="[48, 38]" width="560" height="46" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="left" text="Photo 1 of 1" />
+            <Label id="photoSubLabel" translation="[48, 86]" width="620" height="28" font="font:SmallestBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="[Left/Right] Photo  •  [OK] Shuffle  •  [Play] Pause" />
 
-            <!-- Right Section: Current Genre, Radio Station & Live Song -->
-            <Label
-                id="radioHeaderLabel"
-                translation="[680, 16]"
-                width="1184"
-                height="32"
-                font="font:SmallestBoldSystemFont"
-                color="0x80DEEAFF"
-                horizAlign="right"
-                text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
-            <Label
-                id="radioStatusLabel"
-                translation="[680, 46]"
-                width="1184"
-                height="50"
-                font="font:MediumBoldSystemFont"
-                color="0xFFD54FFF"
-                horizAlign="right"
-                text="100.3 K-LOVE Los Angeles" />
-            <Label
-                id="nowPlayingLabel"
-                translation="[680, 98]"
-                width="1184"
-                height="32"
-                font="font:SmallBoldSystemFont"
-                color="0xA5D6A7FF"
-                horizAlign="right"
-                text="" />
+            <!-- Right: Genre, Station, Live Song & Album Cover Art -->
+            <Label id="radioHeaderLabel" translation="[640, 12]" width="1096" height="26" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="right" text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
+            <Label id="radioStatusLabel" translation="[640, 38]" width="1096" height="44" font="font:MediumBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="100.3 K-LOVE Los Angeles" />
+            <Label id="nowPlayingLabel" translation="[640, 84]" width="1096" height="30" font="font:SmallestBoldSystemFont" color="0xA5D6A7FF" horizAlign="right" text="Live Broadcast  •  Press [ * ] for 100 Stations &amp; Voice Search" />
+            <Label id="controlsHintLabel" translation="[640, 84]" width="1096" height="30" font="font:SmallestBoldSystemFont" color="0xEEEEEEFF" horizAlign="right" visible="false" text="" />
 
-            <!-- Subtle Horizontal Divider -->
-            <Rectangle
-                translation="[56, 138]"
-                width="1808"
-                height="2"
-                color="0xFFFFFF26" />
-
-            <!-- Bottom Row: Easy-to-Read Remote Button Guide -->
-            <Label
-                id="controlsHintLabel"
-                translation="[40, 148]"
-                width="1840"
-                height="40"
-                font="font:SmallBoldSystemFont"
-                color="0xEEEEEEFF"
-                horizAlign="center"
-                text="[Left/Right] Photo  |  [Rew/FF] ±10  |  [Up/Down] Genre  |  [*] 100 Stations &amp; Search  |  [OK] Shuffle  |  [Play] Pause  |  [Replay] Mute" />
-        </Group>
-
-        <!-- Pandora-for-TV 100-Station Browser & Search Overlay (Open with * Star) -->
-        <Group id="stationsOverlay" visible="false">
-            <Rectangle
-                width="1920"
-                height="1080"
-                color="0x090D16F7" />
-
-            <!-- Top Header Bar -->
-            <Label
-                id="stationsHeaderTitle"
-                translation="[80, 34]"
-                width="820"
-                height="56"
-                font="font:LargeBoldSystemFont"
-                color="0xFFD54FFF"
-                horizAlign="left"
-                text="FAMILY RADIO  •  100 STATIONS" />
-            <Label
-                id="stationsNowPlayingLabel"
-                translation="[900, 42]"
-                width="940"
-                height="46"
-                font="font:MediumBoldSystemFont"
-                color="0xFFFFFFFF"
-                horizAlign="right"
-                text="Now Playing: 100.3 K-LOVE Los Angeles" />
-
-            <!-- Search Row (Press UP from Top Station Row to Focus Search!) -->
-            <Group id="searchBoxGroup" translation="[80, 114]">
-                <Rectangle
-                    id="searchBoxBorder"
-                    width="1060"
-                    height="76"
-                    color="0x28354AFF" />
-                <Rectangle
-                    id="searchBoxBg"
-                    translation="[4, 4]"
-                    width="1052"
-                    height="68"
-                    color="0x111A2BFF" />
-                <Label
-                    id="searchBoxLabel"
-                    translation="[28, 16]"
-                    width="1000"
-                    height="44"
-                    font="font:MediumBoldSystemFont"
-                    color="0xB0BEC5FF"
-                    horizAlign="left"
-                    text="Search 100 Stations (Press OK to Type)..." />
+            <!-- Album Cover Art Frame on Screensaver HUD -->
+            <Group id="hudAlbumGroup" translation="[1758, 14]" scaleRotateCenter="[52, 52]">
+                <Rectangle width="104" height="104" color="0xFFD54FFF" />
+                <Rectangle translation="[3, 3]" width="98" height="98" color="0x141C2BFF" />
+                <Label translation="[3, 36]" width="98" height="32" font="font:SmallestBoldSystemFont" color="0xFFD54F88" horizAlign="center" text="RADIO" />
+                <Poster id="hudAlbumPoster" translation="[3, 3]" width="98" height="98" loadWidth="200" loadHeight="200" loadDisplayMode="scaleToZoom" />
             </Group>
-
-            <Group id="showAllBtnGroup" translation="[1170, 114]">
-                <Rectangle
-                    id="showAllBtnBorder"
-                    width="360"
-                    height="76"
-                    color="0x28354AFF" />
-                <Rectangle
-                    id="showAllBtnBg"
-                    translation="[4, 4]"
-                    width="352"
-                    height="68"
-                    color="0x111A2BFF" />
-                <Label
-                    id="showAllBtnLabel"
-                    translation="[16, 16]"
-                    width="320"
-                    height="44"
-                    font="font:MediumBoldSystemFont"
-                    color="0xFFFFFFFF"
-                    horizAlign="center"
-                    text="Show All 100" />
-            </Group>
-
-            <Group id="closeStationsBtnGroup" translation="[1560, 114]">
-                <Rectangle
-                    id="closeStationsBtnBorder"
-                    width="280"
-                    height="76"
-                    color="0x28354AFF" />
-                <Rectangle
-                    id="closeStationsBtnBg"
-                    translation="[4, 4]"
-                    width="272"
-                    height="68"
-                    color="0x111A2BFF" />
-                <Label
-                    id="closeStationsBtnLabel"
-                    translation="[16, 16]"
-                    width="240"
-                    height="44"
-                    font="font:MediumBoldSystemFont"
-                    color="0x80DEEAFF"
-                    horizAlign="center"
-                    text="Back to Photos" />
-            </Group>
-
-            <!-- 3x3 Pandora-Style Station Card Grid (Populated in MainScene.brs) -->
-            <Group id="stationsGridGroup" />
-
-            <!-- Empty Search Results Message -->
-            <Label
-                id="stationsEmptyLabel"
-                translation="[160, 440]"
-                width="1600"
-                height="120"
-                font="font:LargeBoldSystemFont"
-                color="0xFFD54FFF"
-                horizAlign="center"
-                wrap="true"
-                visible="false"
-                text="No stations matched that search. Move right and press OK on 'Show All 100'!" />
-
-            <!-- Bottom Navigation & Page Guide -->
-            <Rectangle
-                translation="[80, 932]"
-                width="1760"
-                height="2"
-                color="0xFFFFFF26" />
-            <Label
-                id="stationsPageLabel"
-                translation="[80, 954]"
-                width="1760"
-                height="48"
-                font="font:MediumBoldSystemFont"
-                color="0xEEEEEEFF"
-                horizAlign="center"
-                text="Showing 1 - 9 of 100   •   Press [UP] at Top Row to Search   •   [Rew/FF] Next Page   •   [Back] Return to Photos" />
         </Group>
 
-        <!-- Slideshow Auto-Advance Timer (12 Seconds) -->
-        <Timer
-            id="slideshowTimer"
-            repeat="true"
-            duration="12.0" />
+        <!-- Polished Pandora-for-TV 100-Station Browser & Voice Search Screen -->
+        <Group id="stationsOverlay" visible="false" opacity="0.0">
+            <Rectangle width="1920" height="1080" color="0x070B14F8" />
+            <Rectangle width="1920" height="6" color="0xFFD54FFF" />
 
-        <!-- Toast Auto-Hide Timer (6 Seconds for Easy Reading) -->
-        <Timer
-            id="toastTimer"
-            repeat="false"
-            duration="6.0" />
+            <Group id="stationsContentGroup" translation="[0, 0]">
+                <!-- Top Left: Brand Header & Voice Search Bar -->
+                <Label id="stationsHeaderTitle" translation="[80, 30]" width="980" height="50" font="font:LargeBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="PANDORA RADIO  •  100 STATIONS" />
+                <Label id="stationsSubHeader" translation="[80, 80]" width="980" height="30" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="left" text="Move UP to the Search Bar to use your Roku Controller Mic or Keyboard   •   Press [ * ] to Return to Photos" />
 
-        <!-- Living-Room Clock Refresh Timer (Every 15 Seconds) -->
-        <Timer
-            id="clockTimer"
-            repeat="true"
-            duration="15.0" />
+                <!-- Search Row (Move UP from Top Row of Stations to Focus!) -->
+                <Group id="searchBoxGroup" translation="[80, 120]" scaleRotateCenter="[390, 38]">
+                    <Rectangle id="searchBoxBorder" width="780" height="76" color="0x28354AFF" />
+                    <Rectangle id="searchBoxBg" translation="[4, 4]" width="772" height="68" color="0x111A2BFF" />
+                    <Rectangle id="micBadgeBg" translation="[14, 14]" width="48" height="48" color="0x1E88E5FF" />
+                    <Label id="micBadgeLabel" translation="[14, 22]" width="48" height="34" font="font:SmallestBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="MIC" />
+                    <Label id="searchBoxLabel" translation="[76, 18]" width="684" height="42" font="font:MediumBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="Speak into Remote Mic or Press OK to Search..." />
+                    <VoiceTextEditBox id="voiceSearchBox" translation="[68, 12]" width="696" height="52" voiceEnabled="true" opacity="0.01" />
+                </Group>
 
-        <!-- Background Audio Node for Live Radio Streams -->
+                <Group id="showAllBtnGroup" translation="[880, 120]" scaleRotateCenter="[130, 38]">
+                    <Rectangle id="showAllBtnBorder" width="260" height="76" color="0x28354AFF" />
+                    <Rectangle id="showAllBtnBg" translation="[4, 4]" width="252" height="68" color="0x111A2BFF" />
+                    <Label id="showAllBtnLabel" translation="[12, 18]" width="236" height="42" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" text="Show All 100" />
+                </Group>
+
+                <!-- Top Right: Now Playing Hero Card with Live Album Cover & Equalizer -->
+                <Group id="nowPlayingHeroGroup" translation="[1164, 26]">
+                    <Rectangle width="676" height="170" color="0xFFD54FFF" />
+                    <Rectangle translation="[4, 4]" width="668" height="162" color="0x0E1626FF" />
+
+                    <!-- Hero Album Cover Art -->
+                    <Group id="heroAlbumGroup" translation="[16, 16]" scaleRotateCenter="[69, 69]">
+                        <Rectangle width="138" height="138" color="0x28354AFF" />
+                        <Rectangle translation="[3, 3]" width="132" height="132" color="0x162238FF" />
+                        <Label translation="[3, 50]" width="132" height="36" font="font:SmallBoldSystemFont" color="0xFFD54F77" horizAlign="center" text="ON AIR" />
+                        <Poster id="heroAlbumPoster" translation="[3, 3]" width="132" height="132" loadWidth="260" loadHeight="260" loadDisplayMode="scaleToZoom" />
+                    </Group>
+
+                    <!-- Animated Equalizer Bars + NOW PLAYING Badge -->
+                    <Group id="eqGroup" translation="[172, 22]">
+                        <Rectangle id="eqBar1" translation="[0, 10]" width="6" height="14" color="0x00E676FF" />
+                        <Rectangle id="eqBar2" translation="[10, 4]" width="6" height="20" color="0x00E676FF" />
+                        <Rectangle id="eqBar3" translation="[20, 8]" width="6" height="16" color="0x00E676FF" />
+                        <Rectangle id="eqBar4" translation="[30, 2]" width="6" height="22" color="0x00E676FF" />
+                        <Label id="heroBadgeLabel" translation="[48, 0]" width="440" height="28" font="font:SmallestBoldSystemFont" color="0x00E676FF" horizAlign="left" text="NOW PLAYING LIVE" />
+                    </Group>
+
+                    <Label id="stationsNowPlayingLabel" translation="[172, 54]" width="484" height="44" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="left" text="100.3 K-LOVE Los Angeles" />
+                    <Label id="stationsSongLabel" translation="[172, 98]" width="484" height="32" font="font:SmallBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="Live Broadcast" />
+                    <Label id="stationsGenreLabel" translation="[172, 130]" width="484" height="26" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="left" text="Christian &amp; Encouraging" />
+                </Group>
+
+                <!-- 3x3 Animated Station Grid + Floating Selection Frame -->
+                <Group id="stationsGridWrap" translation="[0, 0]">
+                    <Group id="stationsGridGroup" />
+                    <!-- Smooth Gliding Gold Focus Frame -->
+                    <Group id="gridFocusRing" translation="[80, 224]" visible="true">
+                        <Rectangle width="560" height="204" color="0xFFD54FFF" />
+                        <Rectangle translation="[6, 6]" width="548" height="192" color="0x00000000" />
+                    </Group>
+                </Group>
+
+                <!-- Empty Search Results Notice -->
+                <Label id="stationsEmptyLabel" translation="[160, 460]" width="1600" height="120" font="font:LargeBoldSystemFont" color="0xFFD54FFF" horizAlign="center" wrap="true" visible="false" text="No stations matched that search. Move right and press OK on 'Show All 100'!" />
+
+                <!-- Bottom Bar Guide -->
+                <Rectangle translation="[80, 936]" width="1760" height="2" color="0xFFFFFF26" />
+                <Label id="stationsPageLabel" translation="[80, 954]" width="1760" height="44" font="font:SmallBoldSystemFont" color="0xEEEEEEFF" horizAlign="center" text="Showing 1 - 9 of 100   •   [UP] Search &amp; Voice Mic   •   [OK] Play Station   •   [Rew/FF] Page   •   [ * ] Return to Screensaver" />
+            </Group>
+        </Group>
+
+        <!-- UI Polish & Micro-Interaction Animations -->
+        <Animation id="overlayOpenAnim" duration="0.28" easeFunction="outCubic">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="stationsOverlay.opacity" />
+            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0, 32], [0, 0]]" fieldToInterp="stationsContentGroup.translation" />
+        </Animation>
+        <Animation id="overlayCloseAnim" duration="0.20" easeFunction="inQuad">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="stationsOverlay.opacity" />
+            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0, 0], [0, 24]]" fieldToInterp="stationsContentGroup.translation" />
+        </Animation>
+        <Animation id="focusMoveAnim" duration="0.16" easeFunction="outCubic">
+            <Vector2DFieldInterpolator id="focusMoveInterp" key="[0.0, 1.0]" keyValue="[[80, 224], [80, 224]]" fieldToInterp="gridFocusRing.translation" />
+        </Animation>
+        <Animation id="pageSlideAnim" duration="0.22" easeFunction="outCubic">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.25, 1.0]" fieldToInterp="stationsGridGroup.opacity" />
+            <Vector2DFieldInterpolator id="pageSlideInterp" key="[0.0, 1.0]" keyValue="[[32, 0], [0, 0]]" fieldToInterp="stationsGridGroup.translation" />
+        </Animation>
+        <Animation id="searchFocusAnim" duration="0.18" easeFunction="outQuad">
+            <Vector2DFieldInterpolator id="searchScaleInterp" key="[0.0, 1.0]" keyValue="[[1.0, 1.0], [1.025, 1.025]]" fieldToInterp="searchBoxGroup.scale" />
+        </Animation>
+        <Animation id="artPopAnim" duration="0.32" easeFunction="outBack">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.2, 1.0]" fieldToInterp="heroAlbumPoster.opacity" />
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.2, 1.0]" fieldToInterp="hudAlbumPoster.opacity" />
+            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0.90, 0.90], [1.0, 1.0]]" fieldToInterp="heroAlbumGroup.scale" />
+            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0.90, 0.90], [1.0, 1.0]]" fieldToInterp="hudAlbumGroup.scale" />
+        </Animation>
+        <Animation id="eqPulseAnim" duration="0.85" repeat="true" easeFunction="inOutSine">
+            <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[8.0, 22.0, 8.0]" fieldToInterp="eqBar1.height" />
+            <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[22.0, 10.0, 22.0]" fieldToInterp="eqBar2.height" />
+            <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[12.0, 24.0, 12.0]" fieldToInterp="eqBar3.height" />
+            <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[20.0, 8.0, 20.0]" fieldToInterp="eqBar4.height" />
+        </Animation>
+
+        <!-- Timers & Audio Player -->
+        <Timer id="slideshowTimer" repeat="true" duration="12.0" />
+        <Timer id="toastTimer" repeat="false" duration="6.0" />
+        <Timer id="clockTimer" repeat="true" duration="15.0" />
         <Audio id="radioPlayer" />
     </children>
 </component>
