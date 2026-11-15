@@ -59,10 +59,10 @@
             <Label id="photoCounterLabel" translation="[48, 38]" width="560" height="46" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="left" text="Photo 1 of 1" />
             <Label id="photoSubLabel" translation="[48, 86]" width="620" height="28" font="font:SmallestBoldSystemFont" color="0xB0BEC5FF" horizAlign="left" text="[Left/Right] Photo  •  [Play] Pause  •  [Replay] Mute" />
 
-            <!-- Right: Genre, Station, Live Song & Album Cover Art -->
-            <Label id="radioHeaderLabel" translation="[640, 12]" width="1096" height="26" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="right" text="GENRE 1 OF 10  •  CHRISTIAN &amp; ENCOURAGING" />
-            <Label id="radioStatusLabel" translation="[640, 38]" width="1096" height="44" font="font:MediumBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="100.3 K-LOVE Los Angeles" />
-            <Label id="nowPlayingLabel" translation="[640, 84]" width="1096" height="30" font="font:SmallestBoldSystemFont" color="0xA5D6A7FF" horizAlign="right" text="Live Broadcast  •  Press [ OK ] for 100 Stations &amp; Voice Search" />
+            <!-- Right: Station, Live Song & Album Cover Art (No blue text next to album art) -->
+            <Label id="radioHeaderLabel" translation="[640, 12]" width="1096" height="26" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="right" visible="false" text="" />
+            <Label id="radioStatusLabel" translation="[640, 26]" width="1096" height="48" font="font:MediumBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="100.3 K-LOVE Los Angeles" />
+            <Label id="nowPlayingLabel" translation="[640, 78]" width="1096" height="32" font="font:SmallBoldSystemFont" color="0xFFFFFFFF" horizAlign="right" text="Live Broadcast  •  Press [ OK ] for 100 Stations &amp; Voice Search" />
 
             <!-- Album Cover Art Frame on Screensaver HUD -->
             <Group id="hudAlbumGroup" translation="[1758, 14]" scaleRotateCenter="[52, 52]">
@@ -126,17 +126,19 @@
                         <Label id="heroBadgeLabel" translation="[48, 0]" width="440" height="28" font="font:SmallestBoldSystemFont" color="0x00E676FF" horizAlign="left" text="NOW PLAYING LIVE" />
                     </Group>
 
-                    <Label id="stationsNowPlayingLabel" translation="[172, 54]" width="484" height="44" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="left" text="100.3 K-LOVE Los Angeles" />
-                    <Label id="stationsSongLabel" translation="[172, 98]" width="484" height="32" font="font:SmallBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="Live Broadcast" />
-                    <Label id="stationsGenreLabel" translation="[172, 130]" width="484" height="26" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="left" text="Christian &amp; Encouraging" />
+                    <Label id="stationsNowPlayingLabel" translation="[172, 58]" width="484" height="48" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="left" text="100.3 K-LOVE Los Angeles" />
+                    <Label id="stationsSongLabel" translation="[172, 108]" width="484" height="38" font="font:SmallBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="Live Broadcast" />
+                    <Label id="stationsGenreLabel" translation="[172, 130]" width="484" height="26" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" horizAlign="left" visible="false" text="" />
                 </Group>
 
-                <!-- 3x3 Animated Station Grid + Floating Selection Frame -->
+                <!-- 3x3 Animated Station Grid + Hollow Gold Border Focus Frame -->
                 <Group id="stationsGridWrap" translation="[0, 0]">
                     <Group id="stationsGridGroup" />
                     <Group id="gridFocusRing" translation="[80, 224]" scaleRotateCenter="[280, 102]" visible="true">
-                        <Rectangle width="560" height="204" color="0xFFD54FFF" />
-                        <Rectangle translation="[6, 6]" width="548" height="192" color="0x1A294266" />
+                        <Rectangle translation="[0, 0]" width="560" height="6" color="0xFFD54FFF" />
+                        <Rectangle translation="[0, 198]" width="560" height="6" color="0xFFD54FFF" />
+                        <Rectangle translation="[0, 0]" width="6" height="204" color="0xFFD54FFF" />
+                        <Rectangle translation="[554, 0]" width="6" height="204" color="0xFFD54FFF" />
                     </Group>
                 </Group>
 

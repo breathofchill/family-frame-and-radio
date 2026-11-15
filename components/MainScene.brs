@@ -464,9 +464,13 @@ sub playCurrentStation()
     m.radioPlayer.mute = m.isMuted
     m.radioPlayer.control = "play"
 
-    requestAlbumArt(getDefaultArtQueryForStation(station.name, vibe.label))
+    m.hudAlbumPoster.uri = ""
+    m.heroAlbumPoster.uri = ""
+    m.lastArtQuery = ""
+    artQ = getDefaultArtQueryForStation(station.name, vibe.label)
+    requestAlbumArt(artQ, artQ)
     updateRadioHUD()
-    showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), station.name, "Press [UP / DOWN] for Other Genres   •   Press [ * ] for 100 Stations & Voice Search")
+    showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), station.name, "Press [UP / DOWN] for Other Genres   •   Press [ OK ] for 100 Stations & Voice Search")
 end sub
 
 sub onAudioStateChange()
@@ -499,17 +503,17 @@ sub onTimedMetaData()
     artistName = ""
     for each k in ["title", "StreamTitle", "TIT2"]
         if songTitle = "" and meta.DoesExist(k) and meta[k] <> invalid
-            val = meta[k]
-            if type(val) = "roString" or type(val) = "String"
-                songTitle = val.Trim()
+            metaVal = meta[k]
+            if type(metaVal) = "roString" or type(metaVal) = "String"
+                songTitle = metaVal.Trim()
             end if
         end if
     end for
     for each k in ["artist", "TPE1"]
         if artistName = "" and meta.DoesExist(k) and meta[k] <> invalid
-            val = meta[k]
-            if type(val) = "roString" or type(val) = "String"
-                artistName = val.Trim()
+            metaVal = meta[k]
+            if type(metaVal) = "roString" or type(metaVal) = "String"
+                artistName = metaVal.Trim()
             end if
         end if
     end for
@@ -518,19 +522,27 @@ sub onTimedMetaData()
     if artistName <> "" and songTitle <> "" then fullText = artistName + " - " + songTitle
     if fullText <> "" and fullText <> "-" and fullText <> " - " and Instr(1, LCase(fullText), "commercial") = 0
         m.currentSongTitle = fullText
-        requestAlbumArt(fullText)
+        fallbackQ = ""
+        if m.currentStationList <> invalid and m.currentStationList.Count() > m.currentStationIndex
+            st = m.currentStationList[m.currentStationIndex]
+            stGenre = m.vibes[m.currentVibeIndex].label
+            if st.DoesExist("genre") then stGenre = st.genre
+            fallbackQ = getDefaultArtQueryForStation(st.name, stGenre)
+        end if
+        requestAlbumArt(fullText, fallbackQ)
     else
         m.currentSongTitle = ""
     end if
     updateRadioHUD()
 end sub
 
-sub requestAlbumArt(query as String)
+sub requestAlbumArt(query as String, fallbackQuery = "" as String)
     if query = "" or query = m.lastArtQuery then return
     m.lastArtQuery = query
     if m.artTask <> invalid then m.artTask.control = "stop"
     m.artTask = CreateObject("roSGNode", "RadioTask")
     m.artTask.artworkQuery = query
+    m.artTask.fallbackArtQuery = fallbackQuery
     m.artTask.ObserveField("artworkUrl", "onArtworkUrlReady")
     m.artTask.control = "RUN"
 end sub
@@ -564,10 +576,10 @@ sub updateRadioHUD()
     m.stationsNowPlayingLabel.text = stationName
 
     if m.currentSongTitle <> ""
-        m.nowPlayingLabel.text = "Now Playing: " + m.currentSongTitle + "   •   [*] 100 Stations"
+        m.nowPlayingLabel.text = "Now Playing: " + m.currentSongTitle + "   •   [OK] 100 Stations"
         m.stationsSongLabel.text = m.currentSongTitle
     else
-        m.nowPlayingLabel.text = "Live Broadcast   •   Press [ * ] for 100 Stations & Voice Search"
+        m.nowPlayingLabel.text = "Live Broadcast   •   Press [ OK ] for 100 Stations & Voice Search"
         m.stationsSongLabel.text = "Live Broadcast Stream"
     end if
 end sub
@@ -896,11 +908,14 @@ sub playStationFromCatalog(st as Object)
 
     m.radioHeaderLabel.text = "100-STATION BROWSER  •  " + UCase(st.genre)
     m.radioStatusLabel.text = st.name
-    m.nowPlayingLabel.text = "Live Broadcast   •   Press [ * ] for 100 Stations"
+    m.nowPlayingLabel.text = "Live Broadcast   •   Press [ OK ] for 100 Stations"
     m.stationsNowPlayingLabel.text = st.name
     m.stationsSongLabel.text = "Connecting Live Stream..."
-    m.stationsGenreLabel.text = st.genre
-    requestAlbumArt(getDefaultArtQueryForStation(st.name, st.genre))
+    m.hudAlbumPoster.uri = ""
+    m.heroAlbumPoster.uri = ""
+    m.lastArtQuery = ""
+    artQ = getDefaultArtQueryForStation(st.name, st.genre)
+    requestAlbumArt(artQ, artQ)
 end sub
 
 sub openStationSearchDialog()

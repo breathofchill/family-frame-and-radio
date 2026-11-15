@@ -97,25 +97,31 @@ sub fetchStations()
 end sub
 
 sub fetchArtwork()
-    q = cleanArtworkQuery(m.top.artworkQuery)
-    if q = "" then return
-    entities = ["song", "album"]
-    for each entity in entities
-        url = "https://itunes.apple.com/search?term=" + UrlEncode(q) + "&media=music&entity=" + entity + "&limit=1"
-        body = httpGet(url, 4500)
-        if body <> ""
-            json = ParseJson(body)
-            if type(json) = "roAssociativeArray" and json.DoesExist("results") and type(json.results) = "roArray" and json.results.Count() > 0
-                first = json.results[0]
-                if type(first) = "roAssociativeArray" and first.DoesExist("artworkUrl100") and first.artworkUrl100 <> invalid
-                    rawArt = first.artworkUrl100
-                    if type(rawArt) = "roString" or type(rawArt) = "String"
-                        m.top.artworkUrl = rawArt.Replace("100x100bb", "400x400bb")
-                        return
+    queries = []
+    q1 = cleanArtworkQuery(m.top.artworkQuery)
+    q2 = cleanArtworkQuery(m.top.fallbackArtQuery)
+    if q1 <> "" then queries.Push(q1)
+    if q2 <> "" and q2 <> q1 then queries.Push(q2)
+
+    for each q in queries
+        entities = ["song", "album"]
+        for each entity in entities
+            url = "https://itunes.apple.com/search?term=" + UrlEncode(q) + "&media=music&entity=" + entity + "&limit=1"
+            body = httpGet(url, 4500)
+            if body <> ""
+                json = ParseJson(body)
+                if type(json) = "roAssociativeArray" and json.DoesExist("results") and type(json.results) = "roArray" and json.results.Count() > 0
+                    first = json.results[0]
+                    if type(first) = "roAssociativeArray" and first.DoesExist("artworkUrl100") and first.artworkUrl100 <> invalid
+                        rawArt = first.artworkUrl100
+                        if type(rawArt) = "roString" or type(rawArt) = "String"
+                            m.top.artworkUrl = rawArt.Replace("100x100bb", "400x400bb")
+                            return
+                        end if
                     end if
                 end if
             end if
-        end if
+        end for
     end for
 end sub
 
