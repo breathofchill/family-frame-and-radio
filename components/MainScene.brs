@@ -126,6 +126,16 @@ sub init()
                 { name: "Gold Easy Listening & Timeless Hits", url: "https://media-ssl.musicradio.com/GoldMP3", format: "mp3" },
                 { name: "Instrumentals Forever Easy Listening", url: "http://quincy.torontocast.com:1910/stream", format: "mp3" }
             ]
+        },
+        {
+            name: "Christmas Classics & Holiday",
+            tag: "christmas",
+            curated: [
+                { name: "181.FM Christmas Classics", url: "http://listen.181fm.com/181-xtraditional_128k.mp3", format: "mp3" },
+                { name: "Classical Christmas FM", url: "https://christmasfm.cdnstream1.com/2550_128.mp3?aw_0_1st.playerid=esPlayer&aw_0_1st.skey=1605423292", format: "mp3" },
+                { name: "1.FM Always Christmas Radio", url: "http://strm112.1.fm/christmas_mobile_mp3", format: "mp3" },
+                { name: "Sky Radio Christmas", url: "http://playerservices.streamtheworld.com/api/livestream-redirect/SRGSTR08.mp3", format: "mp3" }
+            ]
         }
     ]
 
