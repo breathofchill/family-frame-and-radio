@@ -3,14 +3,14 @@
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
 
     <children>
-        <!-- Solid Dark Background (1920x1080) -->
+        <!-- Solid Deep Charcoal Background (1920x1080) -->
         <Rectangle
             id="background"
             width="1920"
             height="1080"
-            color="0x0D0D0DFF" />
+            color="0x0A0C10FF" />
 
-        <!-- Dual Full-Screen Photo Posters for Smooth Crossfading -->
+        <!-- Dual Full-Screen Photo Posters with Strict 1080p Texture Caps for 200+ Photo Stability -->
         <Poster
             id="posterA"
             width="1920"
@@ -29,7 +29,7 @@
             loadDisplayMode="scaleToFit"
             opacity="0.0" />
 
-        <!-- Crossfade Animation: A -> B -->
+        <!-- Smooth 1.5s Crossfade Animation: Poster A -> Poster B -->
         <Animation
             id="fadeAtoB"
             duration="1.5"
@@ -46,7 +46,7 @@
                 fieldToInterp="posterB.opacity" />
         </Animation>
 
-        <!-- Crossfade Animation: B -> A -->
+        <!-- Smooth 1.5s Crossfade Animation: Poster B -> Poster A -->
         <Animation
             id="fadeBtoA"
             duration="1.5"
@@ -63,111 +63,163 @@
                 fieldToInterp="posterA.opacity" />
         </Animation>
 
-        <!-- Fallback Empty Folder Notice (Shown only if pkg:/images/ has no photos) -->
+        <!-- Fallback Empty Folder Notice (Shown only if pkg:/images/ has no family photos) -->
         <Group id="emptyStateGroup" visible="false">
             <Rectangle
-                translation="[260, 320]"
-                width="1400"
-                height="360"
-                color="0x1A1A1AEE" />
+                translation="[210, 260]"
+                width="1500"
+                height="420"
+                color="0xFFD54FFF" />
+            <Rectangle
+                translation="[216, 266]"
+                width="1488"
+                height="408"
+                color="0x10141DF5" />
             <Label
                 id="emptyTitleLabel"
-                translation="[310, 375]"
-                width="1300"
-                height="80"
+                translation="[260, 315]"
+                width="1400"
+                height="70"
                 font="font:LargeBoldSystemFont"
                 color="0xFFD54FFF"
                 horizAlign="center"
-                text="No Family Photos Found in pkg:/images/" />
+                text="Welcome to Family Frame &amp; Radio" />
             <Label
                 id="emptyBodyLabel"
-                translation="[310, 470]"
-                width="1300"
-                height="160"
-                font="font:MediumSystemFont"
+                translation="[260, 405]"
+                width="1400"
+                height="150"
+                font="font:MediumBoldSystemFont"
                 color="0xFFFFFFFF"
                 horizAlign="center"
                 wrap="true"
-                text="Drop your .jpg, .jpeg, or .png family photos into the images/ folder on your computer, re-zip, and sideload. Meanwhile, enjoy the live radio below!" />
+                text="Your live radio is playing below! To add 200+ family photos, drop .jpg or .png photos into the images/ folder, re-zip, and sideload." />
+            <Label
+                id="emptyHintLabel"
+                translation="[260, 575]"
+                width="1400"
+                height="60"
+                font="font:MediumSystemFont"
+                color="0x80DEEAFF"
+                horizAlign="center"
+                text="Press UP or DOWN on your remote anytime to change the radio genre!" />
         </Group>
 
-        <!-- Top Toast Banner for Station/Vibe Changes & Status Updates -->
-        <Group id="toastGroup" translation="[360, 60]" visible="false">
+        <!-- Grandparent-Friendly Top Radio Dial Banner (Appears on Genre/Station Change) -->
+        <Group id="toastGroup" translation="[260, 44]" visible="false">
+            <!-- Outer Gold Frame -->
             <Rectangle
-                id="toastBg"
-                width="1200"
-                height="130"
-                color="0x000000D8" />
-            <!-- Gold Accent Top Bar -->
-            <Rectangle
-                width="1200"
-                height="8"
+                width="1400"
+                height="174"
                 color="0xFFD54FFF" />
+            <!-- High-Contrast Dark Interior -->
+            <Rectangle
+                translation="[6, 6]"
+                width="1388"
+                height="162"
+                color="0x0B0E17F4" />
+            <!-- Line 1: Genre Number & Category -->
             <Label
                 id="toastTitleLabel"
-                translation="[40, 22]"
-                width="1120"
-                height="48"
+                translation="[40, 20]"
+                width="1320"
+                height="44"
                 font="font:MediumBoldSystemFont"
                 color="0xFFD54FFF"
                 horizAlign="center"
-                text="NOW TUNING" />
+                text="GENRE 1 OF 9  •  CHRISTIAN &amp; UPLIFTING" />
+            <!-- Line 2: Extra-Large Station Name -->
             <Label
                 id="toastMessageLabel"
-                translation="[40, 70]"
-                width="1120"
-                height="48"
+                translation="[40, 68]"
+                width="1320"
+                height="54"
                 font="font:LargeBoldSystemFont"
                 color="0xFFFFFFFF"
                 horizAlign="center"
-                text="Smooth Jazz" />
+                text="100.3 K-LOVE Los Angeles" />
+            <!-- Line 3: Gentle Sub-Hint -->
+            <Label
+                id="toastSubLabel"
+                translation="[40, 126]"
+                width="1320"
+                height="34"
+                font="font:SmallestBoldSystemFont"
+                color="0xB0BEC5FF"
+                horizAlign="center"
+                text="Press [UP / DOWN] to Change Genre   •   Press [ * ] for Next Station in This Genre" />
         </Group>
 
-        <!-- Minimal Grandparent-Friendly Bottom HUD Bar -->
-        <Group id="hudGroup" translation="[0, 930]">
-            <!-- High-Contrast Semi-Transparent Dark Bar -->
+        <!-- Accessible High-Contrast Bottom HUD Bar (10-Foot Grandparent Design) -->
+        <Group id="hudGroup" translation="[0, 904]">
+            <!-- Deep High-Contrast Bar Background -->
             <Rectangle
                 width="1920"
-                height="150"
-                color="0x000000CC" />
-            <!-- Subtle Divider Line -->
+                height="176"
+                color="0x080B11E8" />
+            <!-- Warm Gold Top Accent Strip -->
             <Rectangle
                 width="1920"
-                height="4"
-                color="0xFFFFFF33" />
+                height="6"
+                color="0xFFD54FFF" />
 
-            <!-- Left: Photo Counter & Slideshow Status -->
+            <!-- Left Section: Family Photo Album Counter -->
+            <Label
+                id="photoHeaderLabel"
+                translation="[56, 18]"
+                width="540"
+                height="32"
+                font="font:SmallestBoldSystemFont"
+                color="0xFFD54FFF"
+                horizAlign="left"
+                text="FAMILY PHOTO ALBUM" />
             <Label
                 id="photoCounterLabel"
-                translation="[60, 24]"
-                width="520"
-                height="50"
-                font="font:MediumBoldSystemFont"
+                translation="[56, 50]"
+                width="580"
+                height="52"
+                font="font:LargeBoldSystemFont"
                 color="0xFFFFFFFF"
                 horizAlign="left"
                 text="Photo 1 of 1" />
 
-            <!-- Center-Right: Current Radio Vibe & Station Name -->
+            <!-- Right Section: Current Genre & Radio Station -->
+            <Label
+                id="radioHeaderLabel"
+                translation="[640, 18]"
+                width="1224"
+                height="32"
+                font="font:SmallestBoldSystemFont"
+                color="0x80DEEAFF"
+                horizAlign="right"
+                text="GENRE 1 OF 9  •  CHRISTIAN &amp; UPLIFTING" />
             <Label
                 id="radioStatusLabel"
-                translation="[580, 24]"
-                width="1280"
-                height="50"
+                translation="[640, 50]"
+                width="1224"
+                height="52"
                 font="font:MediumBoldSystemFont"
                 color="0xFFD54FFF"
                 horizAlign="right"
-                text="Radio: Loading Smooth Jazz..." />
+                text="100.3 K-LOVE Los Angeles" />
 
-            <!-- Bottom Row: Oversized, Clear Remote Control Hints -->
+            <!-- Subtle Horizontal Divider -->
+            <Rectangle
+                translation="[56, 114]"
+                width="1808"
+                height="2"
+                color="0xFFFFFF26" />
+
+            <!-- Bottom Row: Easy-to-Read Remote Button Guide -->
             <Label
                 id="controlsHintLabel"
-                translation="[60, 86]"
-                width="1800"
-                height="46"
+                translation="[40, 124]"
+                width="1840"
+                height="42"
                 font="font:SmallBoldSystemFont"
-                color="0xDDDDDDFF"
+                color="0xEEEEEEFF"
                 horizAlign="center"
-                text="[Left/Right] Prev/Next Photo   |   [Up/Down] Change Music   |   [OK/Play] Pause Photos   |   [Replay / *] Mute Music" />
+                text="[Left/Right] Next Photo   |   [Rew/FF] Jump 10 Photos   |   [Up/Down] Change Genre (1-9)   |   [*] Next Station   |   [OK] Pause   |   [Replay] Mute" />
         </Group>
 
         <!-- Slideshow Auto-Advance Timer (12 Seconds) -->
@@ -176,13 +228,13 @@
             repeat="true"
             duration="12.0" />
 
-        <!-- Toast Auto-Hide Timer (4 Seconds) -->
+        <!-- Toast Auto-Hide Timer (6 Seconds for Easy Reading) -->
         <Timer
             id="toastTimer"
             repeat="false"
-            duration="4.0" />
+            duration="6.0" />
 
-        <!-- Background Audio Node for Live MP3 Radio Streams -->
+        <!-- Background Audio Node for Live Radio Streams -->
         <Audio id="radioPlayer" />
     </children>
 </component>

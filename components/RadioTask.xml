@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <component name="RadioTask" extends="Task">
     <interface>
-        <!-- Input: Search tag for Radio Browser API (e.g., "smooth jazz", "oldies") -->
+        <!-- Input: Search tag for Radio Browser API (e.g., "oldies", "classical") -->
         <field id="searchTag" type="string" />
-        <!-- Output: Array of station AA items [{ name: "...", url: "..." }] -->
+        <!-- Optional Input: Specific station name query (e.g., "K-LOVE", "KUSC") -->
+        <field id="searchName" type="string" />
+        <!-- Optional Input: Pre-curated priority streams for this genre -->
+        <field id="curatedStations" type="roArray" />
+        <!-- Output: Combined array of station items [{ name: "...", url: "...", format: "mp3"|"aac" }] -->
         <field id="stations" type="roArray" />
-        <!-- Output: Status message if fetch fails or succeeds -->
+        <!-- Output: Status ("idle", "loading", "ready", "error") -->
         <field id="status" type="string" value="idle" />
     </interface>
 
