@@ -501,7 +501,7 @@ sub onTimedMetaData()
     if type(meta) <> "roAssociativeArray" then return
     songTitle = ""
     artistName = ""
-    for each k in ["title", "StreamTitle", "TIT2"]
+    for each k in ["title", "Title", "StreamTitle", "TIT2"]
         if songTitle = "" and meta.DoesExist(k) and meta[k] <> invalid
             metaVal = meta[k]
             if type(metaVal) = "roString" or type(metaVal) = "String"
@@ -509,7 +509,7 @@ sub onTimedMetaData()
             end if
         end if
     end for
-    for each k in ["artist", "TPE1"]
+    for each k in ["artist", "Artist", "TPE1"]
         if artistName = "" and meta.DoesExist(k) and meta[k] <> invalid
             metaVal = meta[k]
             if type(metaVal) = "roString" or type(metaVal) = "String"
@@ -540,9 +540,9 @@ sub requestAlbumArt(query as String, fallbackQuery = "" as String)
     if query = "" or query = m.lastArtQuery then return
     m.lastArtQuery = query
     if m.artTask <> invalid then m.artTask.control = "stop"
-    m.artTask = CreateObject("roSGNode", "RadioTask")
-    m.artTask.artworkQuery = query
-    m.artTask.fallbackArtQuery = fallbackQuery
+    m.artTask = CreateObject("roSGNode", "ArtworkTask")
+    m.artTask.query = query
+    m.artTask.fallbackQuery = fallbackQuery
     m.artTask.ObserveField("artworkUrl", "onArtworkUrlReady")
     m.artTask.control = "RUN"
 end sub
