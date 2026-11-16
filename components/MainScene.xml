@@ -188,6 +188,7 @@
         <Timer id="slideshowTimer" repeat="true" duration="12.0" />
         <Timer id="toastTimer" repeat="false" duration="6.0" />
         <Timer id="clockTimer" repeat="true" duration="15.0" />
+        <Timer id="nowPlayingTimer" repeat="true" duration="18.0" />
         <Audio id="radioPlayer" />
     </children>
 </component>

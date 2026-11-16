@@ -3,6 +3,8 @@
     <interface>
         <field id="query" type="string" />
         <field id="fallbackQuery" type="string" />
+        <field id="streamUrl" type="string" value="" />
+        <field id="songTitle" type="string" value="" />
         <field id="artworkUrl" type="string" value="" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/ArtworkTask.brs" />

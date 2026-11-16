@@ -25,6 +25,7 @@ sub init()
     m.slideshowTimer = m.top.findNode("slideshowTimer")
     m.toastTimer = m.top.findNode("toastTimer")
     m.clockTimer = m.top.findNode("clockTimer")
+    m.nowPlayingTimer = m.top.findNode("nowPlayingTimer")
     m.radioPlayer = m.top.findNode("radioPlayer")
 
     m.stationsOverlay = m.top.findNode("stationsOverlay")
@@ -150,8 +151,10 @@ sub init()
     m.slideshowTimer.ObserveField("fire", "onSlideshowTimerFire")
     m.toastTimer.ObserveField("fire", "onToastTimerFire")
     m.clockTimer.ObserveField("fire", "updateLivingRoomClock")
+    m.nowPlayingTimer.ObserveField("fire", "onNowPlayingTimerFire")
     m.radioPlayer.ObserveField("state", "onAudioStateChange")
     m.radioPlayer.ObserveField("timedMetaData", "onTimedMetaData")
+    m.radioPlayer.ObserveField("timedMetaData2", "onTimedMetaData")
     m.fadeAtoB.ObserveField("state", "onFadeAtoBState")
     m.fadeBtoA.ObserveField("state", "onFadeBtoAState")
     m.posterA.ObserveField("loadStatus", "onPosterALoadStatus")
@@ -161,6 +164,7 @@ sub init()
 
     updateLivingRoomClock()
     m.clockTimer.control = "start"
+    m.nowPlayingTimer.control = "start"
     m.eqPulseAnim.control = "start"
     discoverPhotos()
     loadCurrentVibe()
@@ -455,6 +459,7 @@ sub playCurrentStation()
     content.url = station.url
     content.title = station.name
     content.streamFormat = streamFormat
+    content.live = true
 
     m.currentSongTitle = ""
     m.activePlayingUrl = station.url
@@ -468,7 +473,7 @@ sub playCurrentStation()
     m.heroAlbumPoster.uri = ""
     m.lastArtQuery = ""
     artQ = getDefaultArtQueryForStation(station.name, vibe.label)
-    requestAlbumArt(artQ, artQ)
+    requestAlbumArt("", artQ, station.url)
     updateRadioHUD()
     showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), station.name, "Press [UP / DOWN] for Other Genres   •   Press [ OK ] for 100 Stations & Voice Search")
 end sub
@@ -496,9 +501,8 @@ sub toggleMute()
     updateRadioHUD()
 end sub
 
-sub onTimedMetaData()
-    meta = m.radioPlayer.timedMetaData
-    if type(meta) <> "roAssociativeArray" then return
+function extractTitleFromMeta(meta as Dynamic) as String
+    if type(meta) <> "roAssociativeArray" then return ""
     songTitle = ""
     artistName = ""
     for each k in ["title", "Title", "StreamTitle", "TIT2"]
@@ -517,41 +521,73 @@ sub onTimedMetaData()
             end if
         end if
     end for
-
     fullText = songTitle
     if artistName <> "" and songTitle <> "" then fullText = artistName + " - " + songTitle
-    if fullText <> "" and fullText <> "-" and fullText <> " - " and Instr(1, LCase(fullText), "commercial") = 0
-        m.currentSongTitle = fullText
-        fallbackQ = ""
-        if m.currentStationList <> invalid and m.currentStationList.Count() > m.currentStationIndex
-            st = m.currentStationList[m.currentStationIndex]
-            stGenre = m.vibes[m.currentVibeIndex].label
-            if st.DoesExist("genre") then stGenre = st.genre
-            fallbackQ = getDefaultArtQueryForStation(st.name, stGenre)
+    if fullText <> "" and fullText <> "-" and fullText <> " - " and Instr(1, LCase(fullText), "commercial") = 0 and Instr(1, LCase(fullText), "promo") = 0
+        return fullText
+    end if
+    return ""
+end function
+
+sub onTimedMetaData()
+    fullText = extractTitleFromMeta(m.radioPlayer.timedMetaData)
+    if fullText = "" then fullText = extractTitleFromMeta(m.radioPlayer.timedMetaData2)
+    if fullText <> ""
+        if fullText <> m.currentSongTitle
+            m.currentSongTitle = fullText
+            requestAlbumArt(fullText, "", "")
         end if
-        requestAlbumArt(fullText, fallbackQ)
     else
         m.currentSongTitle = ""
     end if
     updateRadioHUD()
 end sub
 
-sub requestAlbumArt(query as String, fallbackQuery = "" as String)
-    if query = "" or query = m.lastArtQuery then return
-    m.lastArtQuery = query
+sub onNowPlayingTimerFire()
+    if m.activePlayingUrl = "" then return
+    fullText = extractTitleFromMeta(m.radioPlayer.timedMetaData)
+    if fullText = "" then fullText = extractTitleFromMeta(m.radioPlayer.timedMetaData2)
+    if fullText <> ""
+        if fullText <> m.currentSongTitle
+            m.currentSongTitle = fullText
+            requestAlbumArt(fullText, "", "")
+            updateRadioHUD()
+        end if
+        return
+    end if
+    ' Poll live ICY StreamTitle in background for http:// streams
+    requestAlbumArt("", "", m.activePlayingUrl)
+end sub
+
+sub requestAlbumArt(query as String, fallbackQuery = "" as String, streamUrl = "" as String)
+    if query <> "" and query = m.lastArtQuery then return
+    if query <> "" then m.lastArtQuery = query
     if m.artTask <> invalid then m.artTask.control = "stop"
     m.artTask = CreateObject("roSGNode", "ArtworkTask")
     m.artTask.query = query
     m.artTask.fallbackQuery = fallbackQuery
+    m.artTask.streamUrl = streamUrl
+    m.artTask.ObserveField("songTitle", "onArtworkSongTitleReady")
     m.artTask.ObserveField("artworkUrl", "onArtworkUrlReady")
     m.artTask.control = "RUN"
+end sub
+
+sub onArtworkSongTitleReady()
+    if m.artTask = invalid or m.artTask.songTitle = "" then return
+    if m.artTask.songTitle <> m.currentSongTitle
+        m.currentSongTitle = m.artTask.songTitle
+        m.lastArtQuery = m.artTask.songTitle
+        updateRadioHUD()
+    end if
 end sub
 
 sub onArtworkUrlReady()
     if m.artTask = invalid or m.artTask.artworkUrl = "" then return
     artUrl = m.artTask.artworkUrl
-    m.hudAlbumPoster.uri = artUrl
-    m.heroAlbumPoster.uri = artUrl
+    if artUrl <> m.hudAlbumPoster.uri
+        m.hudAlbumPoster.uri = artUrl
+        m.heroAlbumPoster.uri = artUrl
+    end if
 end sub
 
 sub onAlbumArtLoadStatus()
@@ -896,6 +932,7 @@ sub playStationFromCatalog(st as Object)
     content.url = st.url
     content.title = st.name
     content.streamFormat = streamFormat
+    content.live = true
 
     m.currentSongTitle = ""
     m.activePlayingUrl = st.url
@@ -915,7 +952,7 @@ sub playStationFromCatalog(st as Object)
     m.heroAlbumPoster.uri = ""
     m.lastArtQuery = ""
     artQ = getDefaultArtQueryForStation(st.name, st.genre)
-    requestAlbumArt(artQ, artQ)
+    requestAlbumArt("", artQ, st.url)
 end sub
 
 sub openStationSearchDialog()
