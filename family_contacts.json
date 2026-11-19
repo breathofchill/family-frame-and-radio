@@ -1,0 +1,12 @@
+{
+  "homeAddress": "Update in family_contacts.json on GitHub",
+  "primaryContactName": "Family Member (Primary)",
+  "primaryContactPhone": "(310) 555-0100",
+  "secondaryContactName": "Family Member (Backup)",
+  "secondaryContactPhone": "(310) 555-0101",
+  "doctorName": "Primary Care Doctor",
+  "doctorPhone": "(310) 555-0102",
+  "pharmacyName": "Local Pharmacy",
+  "pharmacyPhone": "(310) 555-0103",
+  "notes": "For life-threatening emergencies, always dial 911 immediately."
+}

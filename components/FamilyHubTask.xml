@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="FamilyHubTask" extends="Task">
+    <interface>
+        <field id="mode" type="string" value="all" />
+        <field id="verseText" type="string" value="" />
+        <field id="verseRef" type="string" value="" />
+        <field id="msgId" type="string" value="" />
+        <field id="msgSender" type="string" value="" />
+        <field id="msgText" type="string" value="" />
+        <field id="contacts" type="assocarray" />
+        <field id="status" type="string" value="" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/FamilyHubTask.brs" />
+</component>

@@ -45,7 +45,25 @@ sub init()
     m.clockTimer = m.top.findNode("clockTimer")
     m.nowPlayingTimer = m.top.findNode("nowPlayingTimer")
     m.photoSyncTimer = m.top.findNode("photoSyncTimer")
+    m.msgPollTimer = m.top.findNode("msgPollTimer")
+    m.ttsDuckTimer = m.top.findNode("ttsDuckTimer")
+    m.stationFadeTimer = m.top.findNode("stationFadeTimer")
     m.radioPlayer = m.top.findNode("radioPlayer")
+
+    m.verseBannerGroup = m.top.findNode("verseBannerGroup")
+    m.verseRefLabel = m.top.findNode("verseRefLabel")
+    m.verseBodyLabel = m.top.findNode("verseBodyLabel")
+    m.ttsAlertGroup = m.top.findNode("ttsAlertGroup")
+    m.ttsAlertSenderLabel = m.top.findNode("ttsAlertSenderLabel")
+    m.ttsAlertBodyLabel = m.top.findNode("ttsAlertBodyLabel")
+
+    m.familyInfoOverlay = m.top.findNode("familyInfoOverlay")
+    m.sosAddressLabel = m.top.findNode("sosAddressLabel")
+    m.sosPrimaryLabel = m.top.findNode("sosPrimaryLabel")
+    m.sosSecondaryLabel = m.top.findNode("sosSecondaryLabel")
+    m.sosDoctorLabel = m.top.findNode("sosDoctorLabel")
+    m.sosPharmacyLabel = m.top.findNode("sosPharmacyLabel")
+    m.sosNoteLabel = m.top.findNode("sosNoteLabel")
 
     m.stationsOverlay = m.top.findNode("stationsOverlay")
     m.stationsContentGroup = m.top.findNode("stationsContentGroup")
@@ -72,6 +90,8 @@ sub init()
     m.speedBtnBorder = m.top.findNode("speedBtnBorder")
     m.speedBtnBg = m.top.findNode("speedBtnBg")
     m.speedBtnLabel = m.top.findNode("speedBtnLabel")
+    m.hubBtnBorder = m.top.findNode("hubBtnBorder")
+    m.hubBtnBg = m.top.findNode("hubBtnBg")
     m.stationsGridGroup = m.top.findNode("stationsGridGroup")
     m.gridFocusRing = m.top.findNode("gridFocusRing")
     m.stationsEmptyLabel = m.top.findNode("stationsEmptyLabel")
@@ -102,6 +122,11 @@ sub init()
     m.currentStationList = []
     m.currentStationIndex = 0
     m.isMuted = false
+    m.isCommercialMuted = false
+    m.isTtsDucking = false
+    m.lastSeenMsgId = ""
+    m.isFamilyHubOpen = false
+    m.pendingRadioContent = invalid
     m.favoriteUrls = {}
     m.isShowingFavorites = false
     m.retryCount = 0
@@ -182,6 +207,9 @@ sub init()
     m.clockTimer.ObserveField("fire", "updateLivingRoomClock")
     m.nowPlayingTimer.ObserveField("fire", "onNowPlayingTimerFire")
     m.photoSyncTimer.ObserveField("fire", "syncCloudPhotos")
+    m.msgPollTimer.ObserveField("fire", "pollFamilyMessages")
+    m.ttsDuckTimer.ObserveField("fire", "onTtsDuckTimerFire")
+    m.stationFadeTimer.ObserveField("fire", "onStationFadeTimerFire")
     m.radioPlayer.ObserveField("state", "onAudioStateChange")
     m.radioPlayer.ObserveField("timedMetaData", "onTimedMetaData")
     m.radioPlayer.ObserveField("timedMetaData2", "onTimedMetaData")
@@ -198,13 +226,91 @@ sub init()
     m.clockTimer.control = "start"
     m.nowPlayingTimer.control = "start"
     m.photoSyncTimer.control = "start"
+    m.msgPollTimer.control = "start"
     m.eqPulseAnim.control = "start"
     discoverPhotos()
     syncCloudPhotos()
+    runFamilyHub("all")
 
     if not resumeSavedStation()
         loadCurrentVibe()
     end if
+end sub
+
+sub runFamilyHub(hubMode as String)
+    if m.hubTask <> invalid then m.hubTask.control = "stop"
+    m.hubTask = CreateObject("roSGNode", "FamilyHubTask")
+    m.hubTask.mode = hubMode
+    m.hubTask.ObserveField("status", "onFamilyHubStatus")
+    m.hubTask.control = "RUN"
+end sub
+
+sub pollFamilyMessages()
+    runFamilyHub("messages")
+end sub
+
+sub onFamilyHubStatus()
+    if m.hubTask = invalid or m.hubTask.status <> "ready" then return
+
+    if m.hubTask.verseText <> "" and m.verseBannerGroup <> invalid
+        m.verseRefLabel.text = "VERSE OF THE DAY  •  " + UCase(m.hubTask.verseRef)
+        m.verseBodyLabel.text = Chr(34) + m.hubTask.verseText + Chr(34)
+        m.verseBannerGroup.visible = true
+    end if
+
+    if type(m.hubTask.contacts) = "roAssociativeArray" and m.hubTask.contacts.Count() > 0
+        c = m.hubTask.contacts
+        if c.DoesExist("homeAddress") then m.sosAddressLabel.text = "Home Address: " + c.homeAddress
+        if c.DoesExist("primaryContactName") then m.sosPrimaryLabel.text = "Primary Contact: " + c.primaryContactName + "   •   " + c.primaryContactPhone
+        if c.DoesExist("secondaryContactName") then m.sosSecondaryLabel.text = "Backup Contact: " + c.secondaryContactName + "   •   " + c.secondaryContactPhone
+        if c.DoesExist("doctorName") then m.sosDoctorLabel.text = "Doctor: " + c.doctorName + "   •   " + c.doctorPhone
+        if c.DoesExist("pharmacyName") then m.sosPharmacyLabel.text = "Pharmacy: " + c.pharmacyName + "   •   " + c.pharmacyPhone
+        if c.DoesExist("notes") then m.sosNoteLabel.text = c.notes
+    end if
+
+    if m.hubTask.msgId <> "" and m.hubTask.msgText <> ""
+        incomingId = m.hubTask.msgId
+        if incomingId <> m.lastSeenMsgId
+            m.lastSeenMsgId = incomingId
+            sec = CreateObject("roRegistrySection", "FamilyFramePrefs")
+            prevSavedId = ""
+            if sec <> invalid and sec.Exists("lastMsgId") then prevSavedId = sec.Read("lastMsgId")
+            if sec <> invalid
+                sec.Write("lastMsgId", incomingId)
+                sec.Flush()
+            end if
+            ' Show Twitch-TTS alert banner & speak aloud if brand-new unseen message
+            if incomingId <> prevSavedId
+                triggerTwitchStyleFamilyAlert(m.hubTask.msgSender, m.hubTask.msgText)
+            end if
+        end if
+    end if
+end sub
+
+sub triggerTwitchStyleFamilyAlert(senderName as String, msgText as String)
+    if senderName = "" then senderName = "Family"
+    m.ttsAlertSenderLabel.text = "From " + senderName + ":"
+    m.ttsAlertBodyLabel.text = Chr(34) + msgText + Chr(34)
+    m.ttsAlertGroup.visible = true
+
+    ' Duck radio audio briefly while Roku Text-to-Speech reads the family message aloud
+    m.isTtsDucking = true
+    syncRadioMuteState()
+
+    if m.ttsObj = invalid then m.ttsObj = CreateObject("roTextToSpeech")
+    if m.ttsObj <> invalid
+        spoken = "New family message from " + senderName + ". " + msgText
+        m.ttsObj.Say(spoken)
+    end if
+
+    m.ttsDuckTimer.control = "stop"
+    m.ttsDuckTimer.control = "start"
+end sub
+
+sub onTtsDuckTimerFire()
+    m.ttsAlertGroup.visible = false
+    m.isTtsDucking = false
+    syncRadioMuteState()
 end sub
 
 sub syncCloudPhotos()
@@ -884,6 +990,65 @@ sub onRadioTaskStatus()
     end if
 end sub
 
+sub syncRadioMuteState()
+    supportsVol = m.radioPlayer.HasField("volume")
+    if supportsVol
+        if m.isTtsDucking
+            m.radioPlayer.volume = 15
+        else
+            m.radioPlayer.volume = 100
+        end if
+        effectiveMute = (m.isMuted or m.isCommercialMuted or m.pendingRadioContent <> invalid)
+    else
+        effectiveMute = (m.isMuted or m.isCommercialMuted or m.isTtsDucking or m.pendingRadioContent <> invalid)
+    end if
+
+    m.radioPlayer.mute = effectiveMute
+    if effectiveMute
+        m.eqPulseAnim.control = "stop"
+        m.hudEqGroup.visible = false
+    else if m.radioPlayer.state = "playing"
+        m.eqPulseAnim.control = "start"
+        m.hudEqGroup.visible = true
+    end if
+end sub
+
+sub startCrossfadeRadioStream(content as Object)
+    m.stationFadeTimer.control = "stop"
+    if m.radioPlayer.state = "playing" or m.radioPlayer.state = "buffering"
+        m.pendingRadioContent = content
+        syncRadioMuteState()
+        m.stationFadeTimer.control = "start"
+    else
+        m.pendingRadioContent = invalid
+        m.radioPlayer.control = "stop"
+        m.radioPlayer.content = content
+        syncRadioMuteState()
+        m.radioPlayer.control = "play"
+    end if
+end sub
+
+sub onStationFadeTimerFire()
+    if m.pendingRadioContent = invalid then return
+    nextContent = m.pendingRadioContent
+    m.pendingRadioContent = invalid
+    m.radioPlayer.control = "stop"
+    m.radioPlayer.content = nextContent
+    syncRadioMuteState()
+    m.radioPlayer.control = "play"
+end sub
+
+function isCommercialText(txt as String) as Boolean
+    if txt = "" then return false
+    l = LCase(txt.Trim())
+    keywords = ["commercial", "ad break", "adbreak", "advertisement", "sponsored by", "sponsor", "promo ", " promo", "station id", "legal id", "spot break", "underwriting"]
+    for each kw in keywords
+        if Instr(1, l, kw) > 0 then return true
+    end for
+    if l = "promo" or l = "ad" or l = "ads" or l = "commercials" then return true
+    return false
+end function
+
 sub playCurrentStation()
     if m.currentStationList = invalid or m.currentStationList.Count() = 0 then return
     if m.currentStationIndex >= m.currentStationList.Count() then m.currentStationIndex = 0
@@ -900,13 +1065,10 @@ sub playCurrentStation()
     content.live = true
 
     m.currentSongTitle = ""
+    m.isCommercialMuted = false
     m.activePlayingUrl = station.url
 
-    m.radioPlayer.control = "stop"
-    m.radioPlayer.content = content
-    m.radioPlayer.mute = m.isMuted
-    m.radioPlayer.control = "play"
-
+    startCrossfadeRadioStream(content)
     saveLastStation(station, vibe.label)
 
     m.hudAlbumPoster.uri = ""
@@ -919,10 +1081,11 @@ sub playCurrentStation()
 end sub
 
 sub onAudioStateChange()
+    if m.pendingRadioContent <> invalid then return
     state = m.radioPlayer.state
     if state = "playing"
         m.retryCount = 0
-        if not m.isMuted then m.hudEqGroup.visible = true
+        syncRadioMuteState()
         updateRadioHUD()
     else if state = "buffering"
         updateRadioHUD()
@@ -941,14 +1104,10 @@ end sub
 
 sub toggleMute()
     m.isMuted = not m.isMuted
-    m.radioPlayer.mute = m.isMuted
+    syncRadioMuteState()
     if m.isMuted
-        m.eqPulseAnim.control = "stop"
-        m.hudEqGroup.visible = false
         showToast("RADIO AUDIO MUTED", "Music is Currently Muted", "Press [Replay] on Your Remote to Unmute Music")
     else
-        m.eqPulseAnim.control = "start"
-        m.hudEqGroup.visible = true
         showToast("RADIO AUDIO UNMUTED", m.radioStatusLabel.text, "Playing Live Radio")
     end if
     updateRadioHUD()
@@ -976,24 +1135,43 @@ function extractTitleFromMeta(meta as Dynamic) as String
     end for
     fullText = songTitle
     if artistName <> "" and songTitle <> "" then fullText = artistName + " - " + songTitle
-    if fullText <> "" and fullText <> "-" and fullText <> " - " and Instr(1, LCase(fullText), "commercial") = 0 and Instr(1, LCase(fullText), "promo") = 0
+    if fullText <> "" and fullText <> "-" and fullText <> " - "
         return fullText
     end if
     return ""
 end function
 
+sub handleIncomingTrackMetadata(fullText as String)
+    if fullText = "" then return
+    if isCommercialText(fullText)
+        wasAdMuted = m.isCommercialMuted
+        m.isCommercialMuted = true
+        m.currentSongTitle = "[Ad Auto-Muted] Commercial Break"
+        if not wasAdMuted then syncRadioMuteState()
+        updateRadioHUD()
+        return
+    end if
+
+    if m.isCommercialMuted
+        m.isCommercialMuted = false
+        syncRadioMuteState()
+    end if
+    if fullText <> m.currentSongTitle
+        m.currentSongTitle = fullText
+        requestAlbumArt(fullText, "", "")
+    end if
+    updateRadioHUD()
+end sub
+
 sub onTimedMetaData()
     fullText = extractTitleFromMeta(m.radioPlayer.timedMetaData)
     if fullText = "" then fullText = extractTitleFromMeta(m.radioPlayer.timedMetaData2)
     if fullText <> ""
-        if fullText <> m.currentSongTitle
-            m.currentSongTitle = fullText
-            requestAlbumArt(fullText, "", "")
-        end if
+        handleIncomingTrackMetadata(fullText)
     else
         m.currentSongTitle = ""
+        updateRadioHUD()
     end if
-    updateRadioHUD()
 end sub
 
 sub onNowPlayingTimerFire()
@@ -1001,11 +1179,7 @@ sub onNowPlayingTimerFire()
     fullText = extractTitleFromMeta(m.radioPlayer.timedMetaData)
     if fullText = "" then fullText = extractTitleFromMeta(m.radioPlayer.timedMetaData2)
     if fullText <> ""
-        if fullText <> m.currentSongTitle
-            m.currentSongTitle = fullText
-            requestAlbumArt(fullText, "", "")
-            updateRadioHUD()
-        end if
+        handleIncomingTrackMetadata(fullText)
         return
     end if
     requestAlbumArt("", "", m.activePlayingUrl)
@@ -1026,6 +1200,17 @@ end sub
 
 sub onArtworkSongTitleReady()
     if m.artTask = invalid or m.artTask.songTitle = "" then return
+    if isCommercialText(m.artTask.songTitle)
+        m.isCommercialMuted = true
+        m.currentSongTitle = "[Ad Auto-Muted] Commercial Break"
+        syncRadioMuteState()
+        updateRadioHUD()
+        return
+    end if
+    if m.isCommercialMuted
+        m.isCommercialMuted = false
+        syncRadioMuteState()
+    end if
     if m.artTask.songTitle <> m.currentSongTitle
         m.currentSongTitle = m.artTask.songTitle
         m.lastArtQuery = m.artTask.songTitle
@@ -1057,7 +1242,9 @@ sub updateRadioHUD()
     statePrefix = ""
     if m.isMuted
         statePrefix = "[MUTED]  "
-    else if m.radioPlayer.state = "buffering"
+    else if m.isCommercialMuted
+        statePrefix = "[AD MUTED]  "
+    else if m.pendingRadioContent <> invalid or m.radioPlayer.state = "buffering"
         statePrefix = "[Loading]  "
     end if
     m.radioStatusLabel.text = statePrefix + stationName
@@ -1184,6 +1371,8 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
     m.shuffleBtnBg.color = "0x111A2BFF"
     m.speedBtnBorder.color = "0x28354AFF"
     m.speedBtnBg.color = "0x111A2BFF"
+    m.hubBtnBorder.color = "0x28354AFF"
+    m.hubBtnBg.color = "0x111A2BFF"
 
     m.favBtnLabel.text = "Favorites (" + getFavoritesCount().ToStr() + ")"
     if m.isShuffleMode
@@ -1207,9 +1396,12 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
         else if m.stationsTopFocusIdx = 3
             m.shuffleBtnBorder.color = "0xFFD54FFF"
             m.shuffleBtnBg.color = "0x1B2B48FF"
-        else
+        else if m.stationsTopFocusIdx = 4
             m.speedBtnBorder.color = "0xFFD54FFF"
             m.speedBtnBg.color = "0x1B2B48FF"
+        else
+            m.hubBtnBorder.color = "0xFFD54FFF"
+            m.hubBtnBg.color = "0x1B2B48FF"
         end if
     end if
 
@@ -1290,8 +1482,26 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
     m.stationsPageLabel.text = "Stations " + (pageStart + 1).ToStr() + "-" + (pageEnd + 1).ToStr() + " of " + total.ToStr() + "   •   [OK] Play   •   [Play] Star Favorite   •   [Rew/FF] Page   •   [Back] Photos"
 end sub
 
+sub openFamilyHubOverlay()
+    m.isFamilyHubOpen = true
+    m.familyInfoOverlay.visible = true
+    runFamilyHub("contacts")
+end sub
+
+sub closeFamilyHubOverlay()
+    m.isFamilyHubOpen = false
+    m.familyInfoOverlay.visible = false
+    m.top.setFocus(true)
+end sub
+
 function onKeyEvent(key as String, press as Boolean) as Boolean
     if not press then return false
+    if m.isFamilyHubOpen
+        if key = "back" or key = "OK" or key = "options"
+            closeFamilyHubOverlay()
+        end if
+        return true
+    end if
     if m.isStationsOpen then return handleStationsKeyEvent(key)
 
     if key = "left" and m.photos.Count() > 0
@@ -1323,6 +1533,9 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     else if key = "OK"
         openStationsBrowser()
         return true
+    else if key = "options"
+        openFamilyHubOverlay()
+        return true
     else if key = "play"
         toggleSlideshowPause()
         return true
@@ -1338,6 +1551,9 @@ function handleStationsKeyEvent(key as String) as Boolean
     if key = "back"
         closeStationsBrowser()
         return true
+    else if key = "options"
+        openFamilyHubOverlay()
+        return true
     else if key = "replay" or key = "instantreplay"
         toggleMute()
         return true
@@ -1348,7 +1564,7 @@ function handleStationsKeyEvent(key as String) as Boolean
             m.stationsTopFocusIdx = m.stationsTopFocusIdx - 1
             syncSearchFocusAnim()
             renderStationsGrid(false, 0)
-        else if key = "right" and m.stationsTopFocusIdx < 4
+        else if key = "right" and m.stationsTopFocusIdx < 5
             m.stationsTopFocusIdx = m.stationsTopFocusIdx + 1
             syncSearchFocusAnim()
             renderStationsGrid(false, 0)
@@ -1373,9 +1589,11 @@ function handleStationsKeyEvent(key as String) as Boolean
             else if m.stationsTopFocusIdx = 3
                 toggleShuffleMode()
                 renderStationsGrid(false, 0)
-            else
+            else if m.stationsTopFocusIdx = 4
                 cycleSlideshowSpeed()
                 renderStationsGrid(false, 0)
+            else
+                openFamilyHubOverlay()
             end if
         end if
         return true
@@ -1431,14 +1649,13 @@ sub playStationFromCatalog(st as Object)
     content.live = true
 
     m.currentSongTitle = ""
+    m.isCommercialMuted = false
     m.activePlayingUrl = st.url
     m.currentStationList = [st]
     m.currentStationIndex = 0
     m.retryCount = 0
-    m.radioPlayer.control = "stop"
-    m.radioPlayer.content = content
-    m.radioPlayer.mute = m.isMuted
-    m.radioPlayer.control = "play"
+
+    startCrossfadeRadioStream(content)
 
     stGenre = "Radio"
     if st.DoesExist("genre") and st.genre <> "" then stGenre = st.genre
@@ -1457,22 +1674,33 @@ sub playStationFromCatalog(st as Object)
 end sub
 
 sub openStationSearchDialog()
-    dlg = CreateObject("roSGNode", "KeyboardDialog")
+    dlg = CreateObject("roSGNode", "StandardKeyboardDialog")
+    if dlg = invalid
+        dlg = CreateObject("roSGNode", "KeyboardDialog")
+    end if
     dlg.title = "Voice or Text Search (100 Stations)"
-    dlg.message = ["Hold the Mic button on your Roku Remote to speak, or type a station/artist (K-LOVE, Sinatra, Jazz, News, Christmas):"]
+    dlg.message = ["Tap the on-screen Mic icon (or focus the text box before holding your remote Mic button) so Roku searches this app instead of the whole TV:"]
     dlg.text = m.stationsSearchQuery
+    if dlg.HasField("textEditBox") and dlg.textEditBox <> invalid
+        te = dlg.textEditBox
+        if te.HasField("hintText") then te.hintText = "Say or type station, artist, or genre..."
+        if te.HasField("voiceEnabled") then te.voiceEnabled = true
+        if te.HasField("voiceEntryType") then te.voiceEntryType = "alphanumeric"
+    end if
     dlg.buttons = ["Search", "Show All 100", "Cancel"]
     dlg.ObserveField("buttonSelected", "onSearchDialogButton")
+    dlg.ObserveField("wasClosed", "onSearchDialogWasClosed")
     m.searchDialog = dlg
     m.top.getScene().dialog = dlg
 end sub
 
 sub onSearchDialogButton()
     if m.searchDialog = invalid then return
-    btn = m.searchDialog.buttonSelected
-    query = m.searchDialog.text
-    m.searchDialog.close = true
+    dlg = m.searchDialog
+    btn = dlg.buttonSelected
+    query = dlg.text
     m.searchDialog = invalid
+    dlg.close = true
     if btn = 0
         m.isShowingFavorites = false
         filterStationsByQuery(query)
@@ -1484,6 +1712,11 @@ sub onSearchDialogButton()
     end if
     syncSearchFocusAnim()
     renderStationsGrid(true, 1)
+    m.top.setFocus(true)
+end sub
+
+sub onSearchDialogWasClosed()
+    m.searchDialog = invalid
     m.top.setFocus(true)
 end sub
 
