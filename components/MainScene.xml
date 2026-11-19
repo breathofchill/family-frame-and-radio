@@ -20,12 +20,12 @@
                 <Poster id="posterB" width="1860" height="896" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToZoom" scaleRotateCenter="[930, 448]" opacity="0.0" />
 
                 <!-- 100 Family Trivia, History & Brain-Fitness Card (Bottom-Left inside frame, auto-rotating) -->
-                <Group id="triviaBannerGroup" translation="[36, 736]" visible="false">
-                    <Rectangle id="triviaOuterRect" width="560" height="120" color="0x80DEEABB" />
-                    <Rectangle id="triviaInnerRect" translation="[3, 3]" width="554" height="114" color="0x0A101EE4" />
-                    <Label id="triviaCatLabel" translation="[18, 10]" width="518" height="24" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" text="THIS DAY IN HISTORY  •  #1" />
-                    <Label id="triviaTopicLabel" translation="[18, 32]" width="518" height="28" font="font:SmallBoldSystemFont" color="0xFFD54FFF" text="The Golden Gate Bridge" />
-                    <Label id="triviaBodyLabel" translation="[18, 58]" width="518" height="50" font="font:SmallestSystemFont" color="0xFFFFFFFF" wrap="true" text="" />
+                <Group id="triviaBannerGroup" translation="[36, 700]" visible="false">
+                    <Rectangle id="triviaOuterRect" width="720" height="156" color="0x80DEEABB" />
+                    <Rectangle id="triviaInnerRect" translation="[3, 3]" width="714" height="150" color="0x0A101EE4" />
+                    <Label id="triviaCatLabel" translation="[20, 10]" width="680" height="24" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" text="THIS DAY IN HISTORY  •  #1" />
+                    <Label id="triviaTopicLabel" translation="[20, 32]" width="680" height="28" font="font:SmallBoldSystemFont" color="0xFFD54FFF" text="The Golden Gate Bridge" />
+                    <Label id="triviaBodyLabel" translation="[20, 58]" width="680" height="88" font="font:SmallestSystemFont" color="0xFFFFFFFF" wrap="true" text="" />
                 </Group>
 
                 <!-- Daily Bible Verse Card (Bottom-Right inside frame, #72) -->
