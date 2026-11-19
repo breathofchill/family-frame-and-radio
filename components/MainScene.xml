@@ -62,9 +62,6 @@
         <Animation id="kenBurnsB" duration="12.0" easeFunction="linear">
             <Vector2DFieldInterpolator id="kbScaleB" key="[0.0, 1.0]" keyValue="[[1.0, 1.0], [1.045, 1.045]]" fieldToInterp="posterB.scale" />
         </Animation>
-        <Animation id="photoProgressAnim" duration="12.0" easeFunction="linear">
-            <FloatFieldInterpolator id="photoProgressInterp" key="[0.0, 1.0]" keyValue="[0.0, 1920.0]" fieldToInterp="photoProgressBar.width" />
-        </Animation>
 
         <!-- Empty Photo Folder Notice -->
         <Group id="emptyStateGroup" visible="false">
@@ -115,11 +112,9 @@
             <Label id="ttsAlertBodyLabel" translation="[40, 112]" width="1320" height="64" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="center" wrap="true" text="" />
         </Group>
 
-        <!-- Sleek Cinema Bottom Bar (128px Tall) with Progress Line, Mini EQ & Live Album Cover -->
+        <!-- Sleek Cinema Bottom Bar (128px Tall) with Mini EQ & Live Album Cover -->
         <Group id="hudGroup" translation="[0, 952]">
             <Rectangle width="1920" height="128" color="0x070A11E8" />
-            <Rectangle width="1920" height="4" color="0xFFFFFF22" />
-            <Rectangle id="photoProgressBar" width="0" height="4" color="0xFFD54FFF" />
 
             <!-- Left: Photo Counter, Speed & Controls -->
             <Label id="photoHeaderLabel" translation="[48, 14]" width="620" height="26" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="FAMILY PHOTO ALBUM  •  STORYBOOK  •  12s" />

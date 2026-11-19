@@ -2,7 +2,7 @@ sub init()
     m.top.setFocus(true)
 
     nodeIds = [
-        "posterA", "posterB", "fadeAtoB", "fadeBtoA", "kenBurnsA", "kenBurnsB", "photoProgressAnim", "photoProgressBar", "emptyStateGroup",
+        "posterA", "posterB", "fadeAtoB", "fadeBtoA", "kenBurnsA", "kenBurnsB", "emptyStateGroup",
         "toastGroup", "toastTitleLabel", "toastMessageLabel", "toastSubLabel", "toastSlideAnim",
         "clockGroup", "clockGreetingLabel", "clockTimeLabel", "clockDateLabel",
         "holidayGroup", "holidayBadgeLabel", "holidayTextLabel",
@@ -667,10 +667,8 @@ sub applySlideshowSpeed(notify as Boolean)
     m.slideshowTimer.duration = secs * 1.0
     m.kenBurnsA.duration = secs * 1.0
     m.kenBurnsB.duration = secs * 1.0
-    m.photoProgressAnim.duration = secs * 1.0
     if not m.isSlideshowPaused and m.photos.Count() > 1
         resetSlideshowTimer()
-        restartPhotoProgress()
     end if
     updatePhotoCounterHUD()
     if notify
@@ -696,14 +694,6 @@ sub startKenBurnsForActivePoster()
         m.posterB.scale = [1.0, 1.0]
         m.kenBurnsB.control = "stop"
         m.kenBurnsB.control = "start"
-    end if
-end sub
-
-sub restartPhotoProgress()
-    m.photoProgressAnim.control = "stop"
-    m.photoProgressBar.width = 0
-    if not m.isSlideshowPaused and m.photos.Count() > 1
-        m.photoProgressAnim.control = "start"
     end if
 end sub
 
@@ -735,7 +725,6 @@ sub discoverPhotos()
         m.emptyStateGroup.visible = true
         m.photoCounterLabel.text = "No Photos Found"
         m.slideshowTimer.control = "stop"
-        m.photoProgressAnim.control = "stop"
     else
         m.emptyStateGroup.visible = false
         m.currentPhotoIndex = 0
@@ -896,14 +885,12 @@ sub toggleSlideshowPause()
     m.isSlideshowPaused = not m.isSlideshowPaused
     if m.isSlideshowPaused
         m.slideshowTimer.control = "stop"
-        m.photoProgressAnim.control = "stop"
         m.kenBurnsA.control = "stop"
         m.kenBurnsB.control = "stop"
         showToast("PHOTO SLIDESHOW PAUSED", "Staying on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Press [Play] Anytime to Resume Slideshow")
     else
         if m.photos.Count() > 1
             m.slideshowTimer.control = "start"
-            restartPhotoProgress()
             startKenBurnsForActivePoster()
         end if
         secs = m.speedOptions[m.speedIdx]
