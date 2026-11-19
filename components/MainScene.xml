@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <component name="MainScene" extends="Scene">
+    <interface>
+        <field id="appActive" type="boolean" value="true" alwaysNotify="true" />
+    </interface>
     <script type="text/brightscript" uri="pkg:/components/StationCatalog.brs" />
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
 

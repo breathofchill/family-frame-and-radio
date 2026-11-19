@@ -1,119 +1,36 @@
 sub init()
     m.top.setFocus(true)
 
-    m.posterA = m.top.findNode("posterA")
-    m.posterB = m.top.findNode("posterB")
-    m.fadeAtoB = m.top.findNode("fadeAtoB")
-    m.fadeBtoA = m.top.findNode("fadeBtoA")
-    m.kenBurnsA = m.top.findNode("kenBurnsA")
-    m.kenBurnsB = m.top.findNode("kenBurnsB")
-    m.photoProgressAnim = m.top.findNode("photoProgressAnim")
-    m.photoProgressBar = m.top.findNode("photoProgressBar")
-    m.emptyStateGroup = m.top.findNode("emptyStateGroup")
-    m.toastGroup = m.top.findNode("toastGroup")
-    m.toastTitleLabel = m.top.findNode("toastTitleLabel")
-    m.toastMessageLabel = m.top.findNode("toastMessageLabel")
-    m.toastSubLabel = m.top.findNode("toastSubLabel")
-    m.toastSlideAnim = m.top.findNode("toastSlideAnim")
-    m.clockGroup = m.top.findNode("clockGroup")
-    m.clockGreetingLabel = m.top.findNode("clockGreetingLabel")
-    m.clockTimeLabel = m.top.findNode("clockTimeLabel")
-    m.clockDateLabel = m.top.findNode("clockDateLabel")
-    m.holidayGroup = m.top.findNode("holidayGroup")
-    m.holidayBadgeLabel = m.top.findNode("holidayBadgeLabel")
-    m.holidayTextLabel = m.top.findNode("holidayTextLabel")
-    m.holidayEffectGroup = m.top.findNode("holidayEffectGroup")
-    m.holidayEmblemIcon = m.top.findNode("holidayEmblemIcon")
-    m.holidayEmblemTitle = m.top.findNode("holidayEmblemTitle")
-    m.holidayFxAnim = m.top.findNode("holidayFxAnim")
+    nodeIds = [
+        "posterA", "posterB", "fadeAtoB", "fadeBtoA", "kenBurnsA", "kenBurnsB", "photoProgressAnim", "photoProgressBar", "emptyStateGroup",
+        "toastGroup", "toastTitleLabel", "toastMessageLabel", "toastSubLabel", "toastSlideAnim",
+        "clockGroup", "clockGreetingLabel", "clockTimeLabel", "clockDateLabel",
+        "holidayGroup", "holidayBadgeLabel", "holidayTextLabel", "holidayEffectGroup", "holidayEmblemIcon", "holidayEmblemTitle", "holidayFxAnim",
+        "photoHeaderLabel", "photoCounterLabel", "photoSubLabel", "radioHeaderLabel", "radioStatusLabel", "nowPlayingLabel", "hudEqGroup", "hudAlbumGroup", "hudAlbumPoster",
+        "slideshowTimer", "toastTimer", "clockTimer", "nowPlayingTimer", "photoSyncTimer", "msgPollTimer", "ttsDuckTimer", "stationFadeTimer", "radioPlayer", "ttsPlayer",
+        "verseBannerGroup", "verseOuterRect", "verseInnerRect", "verseRefLabel", "verseBodyLabel",
+        "ttsAlertGroup", "ttsAlertSenderLabel", "ttsAlertBodyLabel", "ttsSlideAnim",
+        "familyInfoOverlay", "sosAddressLabel", "sosPrimaryLabel", "sosSecondaryLabel", "sosDoctorLabel", "sosPharmacyLabel", "sosNoteLabel",
+        "stationsOverlay", "stationsContentGroup", "stationsHeaderTitle", "stationsNowPlayingLabel", "stationsSongLabel", "stationsGenreLabel", "heroAlbumGroup", "heroAlbumPoster", "heroBadgeLabel",
+        "searchBoxGroup", "searchBoxBorder", "searchBoxBg", "micBadgeBg", "searchBoxLabel",
+        "showAllBtnBorder", "showAllBtnBg", "favBtnBorder", "favBtnBg", "favBtnLabel", "shuffleBtnBorder", "shuffleBtnBg", "shuffleBtnLabel", "speedBtnBorder", "speedBtnBg", "speedBtnLabel", "hubBtnBorder", "hubBtnBg",
+        "stationsGridGroup", "gridFocusRing", "stationsEmptyLabel", "stationsPageLabel",
+        "overlayOpenAnim", "overlayCloseAnim", "focusMoveAnim", "focusMoveInterp", "pageSlideAnim", "pageSlideInterp", "searchFocusAnim", "searchScaleInterp", "artPopAnim", "eqPulseAnim"
+    ]
+    for each nid in nodeIds
+        m[nid] = m.top.findNode(nid)
+    end for
+
     m.fxParticles = []
     for i = 1 to 12
         p = m.top.findNode("fxP" + i.ToStr())
         if p <> invalid then m.fxParticles.Push(p)
     end for
-    m.photoHeaderLabel = m.top.findNode("photoHeaderLabel")
-    m.photoCounterLabel = m.top.findNode("photoCounterLabel")
-    m.photoSubLabel = m.top.findNode("photoSubLabel")
-    m.radioHeaderLabel = m.top.findNode("radioHeaderLabel")
-    m.radioStatusLabel = m.top.findNode("radioStatusLabel")
-    m.nowPlayingLabel = m.top.findNode("nowPlayingLabel")
-    m.hudEqGroup = m.top.findNode("hudEqGroup")
-    m.hudAlbumGroup = m.top.findNode("hudAlbumGroup")
-    m.hudAlbumPoster = m.top.findNode("hudAlbumPoster")
-    m.slideshowTimer = m.top.findNode("slideshowTimer")
-    m.toastTimer = m.top.findNode("toastTimer")
-    m.clockTimer = m.top.findNode("clockTimer")
-    m.nowPlayingTimer = m.top.findNode("nowPlayingTimer")
-    m.photoSyncTimer = m.top.findNode("photoSyncTimer")
-    m.msgPollTimer = m.top.findNode("msgPollTimer")
-    m.ttsDuckTimer = m.top.findNode("ttsDuckTimer")
-    m.stationFadeTimer = m.top.findNode("stationFadeTimer")
-    m.radioPlayer = m.top.findNode("radioPlayer")
-    m.ttsPlayer = m.top.findNode("ttsPlayer")
+
     m.savedRadioContent = invalid
     m.pendingTtsText = ""
-
-    m.verseBannerGroup = m.top.findNode("verseBannerGroup")
-    m.verseOuterRect = m.top.findNode("verseOuterRect")
-    m.verseInnerRect = m.top.findNode("verseInnerRect")
-    m.verseRefLabel = m.top.findNode("verseRefLabel")
-    m.verseBodyLabel = m.top.findNode("verseBodyLabel")
-    m.ttsAlertGroup = m.top.findNode("ttsAlertGroup")
-    m.ttsAlertSenderLabel = m.top.findNode("ttsAlertSenderLabel")
-    m.ttsAlertBodyLabel = m.top.findNode("ttsAlertBodyLabel")
-    m.ttsSlideAnim = m.top.findNode("ttsSlideAnim")
-
-    m.familyInfoOverlay = m.top.findNode("familyInfoOverlay")
-    m.sosAddressLabel = m.top.findNode("sosAddressLabel")
-    m.sosPrimaryLabel = m.top.findNode("sosPrimaryLabel")
-    m.sosSecondaryLabel = m.top.findNode("sosSecondaryLabel")
-    m.sosDoctorLabel = m.top.findNode("sosDoctorLabel")
-    m.sosPharmacyLabel = m.top.findNode("sosPharmacyLabel")
-    m.sosNoteLabel = m.top.findNode("sosNoteLabel")
-
-    m.stationsOverlay = m.top.findNode("stationsOverlay")
-    m.stationsContentGroup = m.top.findNode("stationsContentGroup")
-    m.stationsHeaderTitle = m.top.findNode("stationsHeaderTitle")
-    m.stationsNowPlayingLabel = m.top.findNode("stationsNowPlayingLabel")
-    m.stationsSongLabel = m.top.findNode("stationsSongLabel")
-    m.stationsGenreLabel = m.top.findNode("stationsGenreLabel")
-    m.heroAlbumGroup = m.top.findNode("heroAlbumGroup")
-    m.heroAlbumPoster = m.top.findNode("heroAlbumPoster")
-    m.heroBadgeLabel = m.top.findNode("heroBadgeLabel")
-    m.searchBoxGroup = m.top.findNode("searchBoxGroup")
-    m.searchBoxBorder = m.top.findNode("searchBoxBorder")
-    m.searchBoxBg = m.top.findNode("searchBoxBg")
-    m.micBadgeBg = m.top.findNode("micBadgeBg")
-    m.searchBoxLabel = m.top.findNode("searchBoxLabel")
-    m.showAllBtnBorder = m.top.findNode("showAllBtnBorder")
-    m.showAllBtnBg = m.top.findNode("showAllBtnBg")
-    m.favBtnBorder = m.top.findNode("favBtnBorder")
-    m.favBtnBg = m.top.findNode("favBtnBg")
-    m.favBtnLabel = m.top.findNode("favBtnLabel")
-    m.shuffleBtnBorder = m.top.findNode("shuffleBtnBorder")
-    m.shuffleBtnBg = m.top.findNode("shuffleBtnBg")
-    m.shuffleBtnLabel = m.top.findNode("shuffleBtnLabel")
-    m.speedBtnBorder = m.top.findNode("speedBtnBorder")
-    m.speedBtnBg = m.top.findNode("speedBtnBg")
-    m.speedBtnLabel = m.top.findNode("speedBtnLabel")
-    m.hubBtnBorder = m.top.findNode("hubBtnBorder")
-    m.hubBtnBg = m.top.findNode("hubBtnBg")
-    m.stationsGridGroup = m.top.findNode("stationsGridGroup")
-    m.gridFocusRing = m.top.findNode("gridFocusRing")
-    m.stationsEmptyLabel = m.top.findNode("stationsEmptyLabel")
-    m.stationsPageLabel = m.top.findNode("stationsPageLabel")
-
-    m.overlayOpenAnim = m.top.findNode("overlayOpenAnim")
-    m.overlayCloseAnim = m.top.findNode("overlayCloseAnim")
-    m.focusMoveAnim = m.top.findNode("focusMoveAnim")
-    m.focusMoveInterp = m.top.findNode("focusMoveInterp")
-    m.pageSlideAnim = m.top.findNode("pageSlideAnim")
-    m.pageSlideInterp = m.top.findNode("pageSlideInterp")
-    m.searchFocusAnim = m.top.findNode("searchFocusAnim")
-    m.searchScaleInterp = m.top.findNode("searchScaleInterp")
-    m.artPopAnim = m.top.findNode("artPopAnim")
-    m.eqPulseAnim = m.top.findNode("eqPulseAnim")
-
+    m.isAppActive = true
+    m.pendingFamilyAlert = invalid
     m.orderedPhotos = []
     m.photos = []
     m.currentPhotoIndex = 0
@@ -208,39 +125,59 @@ sub init()
         ]}
     ]
 
-    m.slideshowTimer.ObserveField("fire", "onSlideshowTimerFire")
-    m.toastTimer.ObserveField("fire", "onToastTimerFire")
-    m.clockTimer.ObserveField("fire", "updateLivingRoomClock")
-    m.nowPlayingTimer.ObserveField("fire", "onNowPlayingTimerFire")
-    m.photoSyncTimer.ObserveField("fire", "syncCloudPhotos")
-    m.msgPollTimer.ObserveField("fire", "pollFamilyMessages")
-    m.ttsDuckTimer.ObserveField("fire", "onTtsDuckTimerFire")
-    m.stationFadeTimer.ObserveField("fire", "onStationFadeTimerFire")
-    m.radioPlayer.ObserveField("state", "onAudioStateChange")
-    m.ttsPlayer.ObserveField("state", "onTtsPlayerStateChange")
-    m.radioPlayer.ObserveField("timedMetaData", "onTimedMetaData")
-    m.radioPlayer.ObserveField("timedMetaData2", "onTimedMetaData")
-    m.fadeAtoB.ObserveField("state", "onFadeAtoBState")
-    m.fadeBtoA.ObserveField("state", "onFadeBtoAState")
-    m.posterA.ObserveField("loadStatus", "onPosterALoadStatus")
-    m.posterB.ObserveField("loadStatus", "onPosterBLoadStatus")
-    m.heroAlbumPoster.ObserveField("loadStatus", "onAlbumArtLoadStatus")
-    m.overlayCloseAnim.ObserveField("state", "onOverlayCloseAnimState")
+    obs = [
+        [m.top, "appActive", "onAppActiveChanged"],
+        [m.slideshowTimer, "fire", "onSlideshowTimerFire"],
+        [m.toastTimer, "fire", "onToastTimerFire"],
+        [m.clockTimer, "fire", "updateLivingRoomClock"],
+        [m.nowPlayingTimer, "fire", "onNowPlayingTimerFire"],
+        [m.photoSyncTimer, "fire", "syncCloudPhotos"],
+        [m.msgPollTimer, "fire", "pollFamilyMessages"],
+        [m.ttsDuckTimer, "fire", "onTtsDuckTimerFire"],
+        [m.stationFadeTimer, "fire", "onStationFadeTimerFire"],
+        [m.radioPlayer, "state", "onAudioStateChange"],
+        [m.ttsPlayer, "state", "onTtsPlayerStateChange"],
+        [m.radioPlayer, "timedMetaData", "onTimedMetaData"],
+        [m.radioPlayer, "timedMetaData2", "onTimedMetaData"],
+        [m.fadeAtoB, "state", "onFadeAtoBState"],
+        [m.fadeBtoA, "state", "onFadeBtoAState"],
+        [m.posterA, "loadStatus", "onPosterALoadStatus"],
+        [m.posterB, "loadStatus", "onPosterBLoadStatus"],
+        [m.heroAlbumPoster, "loadStatus", "onAlbumArtLoadStatus"],
+        [m.overlayCloseAnim, "state", "onOverlayCloseAnimState"]
+    ]
+    for each o in obs
+        o[0].ObserveField(o[1], o[2])
+    end for
 
     loadSavedPreferences()
     applySlideshowSpeed(false)
     updateLivingRoomClock()
-    m.clockTimer.control = "start"
-    m.nowPlayingTimer.control = "start"
-    m.photoSyncTimer.control = "start"
-    m.msgPollTimer.control = "start"
-    m.eqPulseAnim.control = "start"
+    for each tmr in [m.clockTimer, m.nowPlayingTimer, m.photoSyncTimer, m.msgPollTimer, m.eqPulseAnim]
+        tmr.control = "start"
+    end for
     discoverPhotos()
     syncCloudPhotos()
     runFamilyHub("all")
 
     if not resumeSavedStation()
         loadCurrentVibe()
+    end if
+end sub
+
+function isAppActiveForTts() as Boolean
+    return (m.isAppActive = true and m.top.visible = true)
+end function
+
+sub onAppActiveChanged()
+    m.isAppActive = (m.top.appActive = true)
+    if isAppActiveForTts()
+        if m.pendingFamilyAlert <> invalid
+            pa = m.pendingFamilyAlert
+            m.pendingFamilyAlert = invalid
+            deliverFamilyAlert(pa.id, pa.sender, pa.text)
+        end if
+        pollFamilyMessages()
     end if
 end sub
 
@@ -253,7 +190,22 @@ sub runFamilyHub(hubMode as String)
 end sub
 
 sub pollFamilyMessages()
+    if not isAppActiveForTts() then return
     runFamilyHub("messages")
+end sub
+
+sub deliverFamilyAlert(incomingId as String, senderName as String, msgText as String)
+    m.lastSeenMsgId = incomingId
+    sec = CreateObject("roRegistrySection", "FamilyFramePrefs")
+    prevSavedId = ""
+    if sec <> invalid and sec.Exists("lastMsgId") then prevSavedId = sec.Read("lastMsgId")
+    if sec <> invalid
+        sec.Write("lastMsgId", incomingId)
+        sec.Flush()
+    end if
+    if incomingId <> prevSavedId
+        triggerTwitchStyleFamilyAlert(senderName, msgText)
+    end if
 end sub
 
 sub onFamilyHubStatus()
@@ -265,34 +217,20 @@ sub onFamilyHubStatus()
         m.verseBodyLabel.text = verseStr
 
         vLen = Len(verseStr)
+        vd = [704, 708, 1120, 148]
         if vLen > 240
-            m.verseBannerGroup.translation = [644, 652]
-            m.verseOuterRect.width = 1180
-            m.verseOuterRect.height = 204
-            m.verseInnerRect.width = 1174
-            m.verseInnerRect.height = 198
-            m.verseRefLabel.width = 1136
-            m.verseBodyLabel.width = 1136
-            m.verseBodyLabel.height = 150
+            vd = [644, 652, 1180, 204]
         else if vLen > 155
-            m.verseBannerGroup.translation = [684, 680]
-            m.verseOuterRect.width = 1140
-            m.verseOuterRect.height = 176
-            m.verseInnerRect.width = 1134
-            m.verseInnerRect.height = 170
-            m.verseRefLabel.width = 1096
-            m.verseBodyLabel.width = 1096
-            m.verseBodyLabel.height = 122
-        else
-            m.verseBannerGroup.translation = [704, 708]
-            m.verseOuterRect.width = 1120
-            m.verseOuterRect.height = 148
-            m.verseInnerRect.width = 1114
-            m.verseInnerRect.height = 142
-            m.verseRefLabel.width = 1076
-            m.verseBodyLabel.width = 1076
-            m.verseBodyLabel.height = 94
+            vd = [684, 680, 1140, 176]
         end if
+        m.verseBannerGroup.translation = [vd[0], vd[1]]
+        m.verseOuterRect.width = vd[2]
+        m.verseOuterRect.height = vd[3]
+        m.verseInnerRect.width = vd[2] - 6
+        m.verseInnerRect.height = vd[3] - 6
+        m.verseRefLabel.width = vd[2] - 44
+        m.verseBodyLabel.width = vd[2] - 44
+        m.verseBodyLabel.height = vd[3] - 54
         m.verseBannerGroup.visible = true
     end if
 
@@ -309,18 +247,11 @@ sub onFamilyHubStatus()
     if m.hubTask.msgId <> "" and m.hubTask.msgText <> ""
         incomingId = m.hubTask.msgId
         if incomingId <> m.lastSeenMsgId
-            m.lastSeenMsgId = incomingId
-            sec = CreateObject("roRegistrySection", "FamilyFramePrefs")
-            prevSavedId = ""
-            if sec <> invalid and sec.Exists("lastMsgId") then prevSavedId = sec.Read("lastMsgId")
-            if sec <> invalid
-                sec.Write("lastMsgId", incomingId)
-                sec.Flush()
+            if not isAppActiveForTts()
+                m.pendingFamilyAlert = { id: incomingId, sender: m.hubTask.msgSender, text: m.hubTask.msgText }
+                return
             end if
-            ' Show Twitch-TTS alert banner & speak aloud if brand-new unseen message
-            if incomingId <> prevSavedId
-                triggerTwitchStyleFamilyAlert(m.hubTask.msgSender, m.hubTask.msgText)
-            end if
+            deliverFamilyAlert(incomingId, m.hubTask.msgSender, m.hubTask.msgText)
         end if
     end if
 end sub
@@ -1461,49 +1392,27 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
         m.searchBoxLabel.color = "0xB0BEC5FF"
     end if
 
-    m.searchBoxBorder.color = "0x28354AFF"
-    m.searchBoxBg.color = "0x111A2BFF"
+    topBtns = [
+        [m.searchBoxBorder, m.searchBoxBg], [m.showAllBtnBorder, m.showAllBtnBg],
+        [m.favBtnBorder, m.favBtnBg], [m.shuffleBtnBorder, m.shuffleBtnBg],
+        [m.speedBtnBorder, m.speedBtnBg], [m.hubBtnBorder, m.hubBtnBg]
+    ]
+    for each tb in topBtns
+        tb[0].color = "0x28354AFF"
+        tb[1].color = "0x111A2BFF"
+    end for
     m.micBadgeBg.color = "0x1E88E5FF"
-    m.showAllBtnBorder.color = "0x28354AFF"
-    m.showAllBtnBg.color = "0x111A2BFF"
-    m.favBtnBorder.color = "0x28354AFF"
-    m.favBtnBg.color = "0x111A2BFF"
-    m.shuffleBtnBorder.color = "0x28354AFF"
-    m.shuffleBtnBg.color = "0x111A2BFF"
-    m.speedBtnBorder.color = "0x28354AFF"
-    m.speedBtnBg.color = "0x111A2BFF"
-    m.hubBtnBorder.color = "0x28354AFF"
-    m.hubBtnBg.color = "0x111A2BFF"
 
     m.favBtnLabel.text = "Favorites (" + getFavoritesCount().ToStr() + ")"
-    if m.isShuffleMode
-        m.shuffleBtnLabel.text = "Shuffle"
-    else
-        m.shuffleBtnLabel.text = "Storybook"
-    end if
+    if m.isShuffleMode then m.shuffleBtnLabel.text = "Shuffle" else m.shuffleBtnLabel.text = "Storybook"
     m.speedBtnLabel.text = "Speed: " + m.speedOptions[m.speedIdx].ToStr() + "s"
 
     if m.stationsFocusArea = "search"
-        if m.stationsTopFocusIdx = 0
-            m.searchBoxBorder.color = "0xFFD54FFF"
-            m.searchBoxBg.color = "0x1B2B48FF"
-            m.micBadgeBg.color = "0x00E676FF"
-        else if m.stationsTopFocusIdx = 1
-            m.showAllBtnBorder.color = "0xFFD54FFF"
-            m.showAllBtnBg.color = "0x1B2B48FF"
-        else if m.stationsTopFocusIdx = 2
-            m.favBtnBorder.color = "0xFFD54FFF"
-            m.favBtnBg.color = "0x1B2B48FF"
-        else if m.stationsTopFocusIdx = 3
-            m.shuffleBtnBorder.color = "0xFFD54FFF"
-            m.shuffleBtnBg.color = "0x1B2B48FF"
-        else if m.stationsTopFocusIdx = 4
-            m.speedBtnBorder.color = "0xFFD54FFF"
-            m.speedBtnBg.color = "0x1B2B48FF"
-        else
-            m.hubBtnBorder.color = "0xFFD54FFF"
-            m.hubBtnBg.color = "0x1B2B48FF"
-        end if
+        fIdx = m.stationsTopFocusIdx
+        if fIdx < 0 or fIdx >= topBtns.Count() then fIdx = topBtns.Count() - 1
+        topBtns[fIdx][0].color = "0xFFD54FFF"
+        topBtns[fIdx][1].color = "0x1B2B48FF"
+        if fIdx = 0 then m.micBadgeBg.color = "0x00E676FF"
     end if
 
     if total = 0
