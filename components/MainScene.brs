@@ -373,24 +373,11 @@ sub onTtsSpeakDelayFire()
     if m.pendingTtsSpeech = "" then return
     if m.ttsObj = invalid
         m.ttsObj = CreateObject("roTextToSpeech")
-        if m.ttsObj <> invalid
-            m.ttsObj.SetLanguage("en-US")
-            voices = m.ttsObj.GetAvailableVoices()
-            if type(voices) = "roArray" and voices.Count() > 0
-                for each v in voices
-                    if Instr(1, LCase(v), "en") > 0
-                        m.ttsObj.SetVoice(v)
-                        exit for
-                    end if
-                end for
-            end if
-            m.ttsObj.SetRate(-5)
-            m.ttsObj.SetPitch(4)
-            m.ttsObj.SetVolume(1000)
-        end if
     end if
     if m.ttsObj <> invalid
-        m.ttsObj.Flush()
+        m.ttsObj.SetVolume(1000)
+        m.ttsObj.SetRate(-5)
+        m.ttsObj.SetPitch(3)
         m.ttsObj.Say(m.pendingTtsSpeech)
     end if
 end sub
