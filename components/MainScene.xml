@@ -4,15 +4,22 @@
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
 
     <children>
-        <!-- Solid Deep Charcoal Background & Dual 1080p Photo Posters with Ken Burns Center -->
+        <!-- Solid Deep Charcoal Background & Walnut-and-Gold Gallery Picture Frame -->
         <Rectangle id="background" width="1920" height="1080" color="0x080A0FFF" />
-        <Poster id="posterA" width="1920" height="1080" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToFit" scaleRotateCenter="[960, 540]" opacity="1.0" />
-        <Poster id="posterB" width="1920" height="1080" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToFit" scaleRotateCenter="[960, 540]" opacity="0.0" />
+        <Group id="galleryFrameGroup" translation="[0, 0]">
+            <Rectangle translation="[0, 0]" width="1920" height="952" color="0x2B1B12FF" />
+            <Rectangle translation="[10, 8]" width="1900" height="936" color="0x4E342EFF" />
+            <Rectangle translation="[18, 16]" width="1884" height="920" color="0xD4AF37FF" />
+            <Rectangle translation="[24, 22]" width="1872" height="908" color="0x0C0F16FF" />
+            <Group id="photoViewportGroup" translation="[30, 28]" clippingRect="[0, 0, 1860, 896]">
+                <Poster id="posterA" width="1860" height="896" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToZoom" scaleRotateCenter="[930, 448]" opacity="1.0" />
+                <Poster id="posterB" width="1860" height="896" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToZoom" scaleRotateCenter="[930, 448]" opacity="0.0" />
+            </Group>
+        </Group>
 
         <!-- Subtle Top & Bottom Cinema Vignette Bands for Ultra-Crisp Text Readability -->
-        <Rectangle translation="[0, 0]" width="1920" height="54" color="0x00000044" />
-        <Rectangle translation="[0, 54]" width="1920" height="46" color="0x0000001E" />
-        <Rectangle translation="[0, 892]" width="1920" height="60" color="0x00000038" />
+        <Rectangle translation="[30, 28]" width="1860" height="44" color="0x00000033" />
+        <Rectangle translation="[30, 876]" width="1860" height="48" color="0x00000033" />
 
         <!-- Smooth 1.5s Photo Crossfade & Gentle Ken Burns Motion Animations -->
         <Animation id="fadeAtoB" duration="1.5" easeFunction="linear">
@@ -225,6 +232,7 @@
         <Timer id="toastTimer" repeat="false" duration="6.0" />
         <Timer id="clockTimer" repeat="true" duration="15.0" />
         <Timer id="nowPlayingTimer" repeat="true" duration="18.0" />
+        <Timer id="photoSyncTimer" repeat="true" duration="1800.0" />
         <Audio id="radioPlayer" />
     </children>
 </component>

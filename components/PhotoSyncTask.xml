@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PhotoSyncTask" extends="Task">
+    <interface>
+        <field id="repoApiUrl" type="string" value="https://api.github.com/repos/breathofchill/family-frame-and-radio/contents/images" />
+        <field id="photoUrls" type="array" />
+        <field id="status" type="string" value="" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/PhotoSyncTask.brs" />
+</component>

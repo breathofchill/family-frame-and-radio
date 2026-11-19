@@ -32,6 +32,7 @@ sub init()
     m.toastTimer = m.top.findNode("toastTimer")
     m.clockTimer = m.top.findNode("clockTimer")
     m.nowPlayingTimer = m.top.findNode("nowPlayingTimer")
+    m.photoSyncTimer = m.top.findNode("photoSyncTimer")
     m.radioPlayer = m.top.findNode("radioPlayer")
 
     m.stationsOverlay = m.top.findNode("stationsOverlay")
@@ -168,6 +169,7 @@ sub init()
     m.toastTimer.ObserveField("fire", "onToastTimerFire")
     m.clockTimer.ObserveField("fire", "updateLivingRoomClock")
     m.nowPlayingTimer.ObserveField("fire", "onNowPlayingTimerFire")
+    m.photoSyncTimer.ObserveField("fire", "syncCloudPhotos")
     m.radioPlayer.ObserveField("state", "onAudioStateChange")
     m.radioPlayer.ObserveField("timedMetaData", "onTimedMetaData")
     m.radioPlayer.ObserveField("timedMetaData2", "onTimedMetaData")
@@ -183,11 +185,51 @@ sub init()
     updateLivingRoomClock()
     m.clockTimer.control = "start"
     m.nowPlayingTimer.control = "start"
+    m.photoSyncTimer.control = "start"
     m.eqPulseAnim.control = "start"
     discoverPhotos()
+    syncCloudPhotos()
 
     if not resumeSavedStation()
         loadCurrentVibe()
+    end if
+end sub
+
+sub syncCloudPhotos()
+    if m.photoSyncTask <> invalid then m.photoSyncTask.control = "stop"
+    m.photoSyncTask = CreateObject("roSGNode", "PhotoSyncTask")
+    m.photoSyncTask.ObserveField("status", "onPhotoSyncStatus")
+    m.photoSyncTask.control = "RUN"
+end sub
+
+sub onPhotoSyncStatus()
+    if m.photoSyncTask = invalid or m.photoSyncTask.status <> "ready" then return
+    cloudUrls = m.photoSyncTask.photoUrls
+    if type(cloudUrls) <> "roArray" or cloudUrls.Count() = 0 then return
+
+    ' Check if the cloud list is identical in count & first/last URL to avoid unnecessary resets
+    if m.orderedPhotos.Count() = cloudUrls.Count() and m.orderedPhotos.Count() > 0
+        if m.orderedPhotos[0] = cloudUrls[0] and m.orderedPhotos[m.orderedPhotos.Count() - 1] = cloudUrls[cloudUrls.Count() - 1]
+            return
+        end if
+    end if
+
+    m.orderedPhotos = cloudUrls
+    if m.isShuffleMode and cloudUrls.Count() > 1
+        shuffleCurrentPhotoList("")
+    else
+        m.photos = []
+        for each u in cloudUrls
+            m.photos.Push(u)
+        end for
+    end if
+
+    m.emptyStateGroup.visible = false
+    if m.currentPhotoIndex >= m.photos.Count() then m.currentPhotoIndex = 0
+    updatePhotoCounterHUD()
+    if m.photos.Count() > 1 and not m.isSlideshowPaused
+        m.slideshowTimer.control = "start"
+        restartPhotoProgress()
     end if
 end sub
 
