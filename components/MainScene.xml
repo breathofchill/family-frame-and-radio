@@ -49,13 +49,21 @@
             <Label id="emptyHintLabel" translation="[260, 575]" width="1400" height="60" font="font:MediumSystemFont" color="0x80DEEAFF" horizAlign="center" text="Press [ OK ] for 100 Radio Stations &amp; Voice Search, or [UP / DOWN] to Change Genres!" />
         </Group>
 
+        <!-- Top-Left Automatic Holiday Reminder & Countdown -->
+        <Group id="holidayGroup" translation="[46, 42]" visible="false">
+            <Rectangle width="430" height="84" color="0xFFD54FCC" />
+            <Rectangle translation="[3, 3]" width="424" height="78" color="0x0A0E18D8" />
+            <Label id="holidayBadgeLabel" translation="[18, 10]" width="388" height="24" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="left" text="UPCOMING HOLIDAY" />
+            <Label id="holidayTextLabel" translation="[18, 36]" width="388" height="36" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" horizAlign="left" text="8 Days Until Thanksgiving" />
+        </Group>
+
         <!-- Top-Right Living-Room Clock, Date & Warm Greeting -->
-        <Group id="clockGroup" translation="[1466, 28]">
-            <Rectangle width="412" height="132" color="0xFFD54FCC" />
-            <Rectangle translation="[3, 3]" width="406" height="126" color="0x0A0E18D8" />
-            <Label id="clockGreetingLabel" translation="[16, 10]" width="374" height="26" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="GOOD AFTERNOON" />
-            <Label id="clockTimeLabel" translation="[16, 36]" width="374" height="52" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" horizAlign="right" text="12:00 PM" />
-            <Label id="clockDateLabel" translation="[16, 90]" width="374" height="30" font="font:SmallBoldSystemFont" color="0xE0E6F0FF" horizAlign="right" text="Wednesday, Nov 18" />
+        <Group id="clockGroup" translation="[1466, 42]">
+            <Rectangle width="408" height="132" color="0xFFD54FCC" />
+            <Rectangle translation="[3, 3]" width="402" height="126" color="0x0A0E18D8" />
+            <Label id="clockGreetingLabel" translation="[16, 10]" width="370" height="26" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="GOOD AFTERNOON" />
+            <Label id="clockTimeLabel" translation="[16, 36]" width="370" height="52" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" horizAlign="right" text="12:00 PM" />
+            <Label id="clockDateLabel" translation="[16, 90]" width="370" height="30" font="font:SmallBoldSystemFont" color="0xE0E6F0FF" horizAlign="right" text="Wednesday, Nov 18" />
         </Group>
 
         <!-- Animated Top Radio Toast Banner -->

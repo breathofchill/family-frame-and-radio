@@ -19,6 +19,9 @@ sub init()
     m.clockGreetingLabel = m.top.findNode("clockGreetingLabel")
     m.clockTimeLabel = m.top.findNode("clockTimeLabel")
     m.clockDateLabel = m.top.findNode("clockDateLabel")
+    m.holidayGroup = m.top.findNode("holidayGroup")
+    m.holidayBadgeLabel = m.top.findNode("holidayBadgeLabel")
+    m.holidayTextLabel = m.top.findNode("holidayTextLabel")
     m.photoHeaderLabel = m.top.findNode("photoHeaderLabel")
     m.photoCounterLabel = m.top.findNode("photoCounterLabel")
     m.photoSubLabel = m.top.findNode("photoSubLabel")
@@ -375,6 +378,80 @@ sub updateLivingRoomClock()
     mName = "Jan"
     if mIdx >= 0 and mIdx < months.Count() then mName = months[mIdx]
     m.clockDateLabel.text = dt.GetWeekday() + ", " + mName + " " + dt.GetDayOfMonth().ToStr()
+    updateHolidayReminder(dt)
+end sub
+
+function getEpochDay(y as Integer, mth as Integer, d as Integer) as Integer
+    if mth <= 2
+        y = y - 1
+        mth = mth + 12
+    end if
+    return Int(365 * y) + Int(y / 4) - Int(y / 100) + Int(y / 400) + Int((153 * (mth - 3) + 2) / 5) + d
+end function
+
+function getNthWeekdayDay(y as Integer, mth as Integer, targetDow as Integer, nth as Integer) as Integer
+    ' targetDow: 0=Sun, 1=Mon, ..., 4=Thu, 6=Sat (Sakamoto)
+    t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]
+    yy = y
+    if mth < 3 then yy = yy - 1
+    dow1 = (yy + Int(yy / 4) - Int(yy / 100) + Int(yy / 400) + t[mth - 1] + 1) mod 7
+    firstMatch = 1 + ((targetDow - dow1 + 7) mod 7)
+    return firstMatch + (nth - 1) * 7
+end function
+
+sub updateHolidayReminder(dt as Object)
+    yr = dt.GetYear()
+    mo = dt.GetMonth()
+    dy = dt.GetDayOfMonth()
+    todayNum = getEpochDay(yr, mo, dy)
+
+    holidays = []
+    for each yOff in [0, 1]
+        yCheck = yr + yOff
+        holidays.Push({ name: "New Year's Day", badge: "HAPPY NEW YEAR!", dayNum: getEpochDay(yCheck, 1, 1) })
+        holidays.Push({ name: "Valentine's Day", badge: "HAPPY VALENTINE'S DAY!", dayNum: getEpochDay(yCheck, 2, 14) })
+        holidays.Push({ name: "St. Patrick's Day", badge: "HAPPY ST. PATRICK'S DAY!", dayNum: getEpochDay(yCheck, 3, 17) })
+        holidays.Push({ name: "Mother's Day", badge: "HAPPY MOTHER'S DAY!", dayNum: getEpochDay(yCheck, 5, getNthWeekdayDay(yCheck, 5, 0, 2)) })
+        holidays.Push({ name: "Father's Day", badge: "HAPPY FATHER'S DAY!", dayNum: getEpochDay(yCheck, 6, getNthWeekdayDay(yCheck, 6, 0, 3)) })
+        holidays.Push({ name: "4th of July", badge: "HAPPY 4TH OF JULY!", dayNum: getEpochDay(yCheck, 7, 4) })
+        holidays.Push({ name: "Halloween", badge: "HAPPY HALLOWEEN!", dayNum: getEpochDay(yCheck, 10, 31) })
+        holidays.Push({ name: "Veterans Day", badge: "HAPPY VETERANS DAY!", dayNum: getEpochDay(yCheck, 11, 11) })
+        holidays.Push({ name: "Thanksgiving", badge: "HAPPY THANKSGIVING!", dayNum: getEpochDay(yCheck, 11, getNthWeekdayDay(yCheck, 11, 4, 4)) })
+        holidays.Push({ name: "Christmas Eve", badge: "MERRY CHRISTMAS EVE!", dayNum: getEpochDay(yCheck, 12, 24) })
+        holidays.Push({ name: "Christmas Day", badge: "MERRY CHRISTMAS!", dayNum: getEpochDay(yCheck, 12, 25) })
+        holidays.Push({ name: "New Year's Eve", badge: "HAPPY NEW YEAR'S EVE!", dayNum: getEpochDay(yCheck, 12, 31) })
+    end for
+
+    bestDiff = 9999
+    bestH = invalid
+    for each h in holidays
+        diff = h.dayNum - todayNum
+        if diff >= 0 and diff < bestDiff
+            bestDiff = diff
+            bestH = h
+        end if
+    end for
+
+    if bestH <> invalid and bestDiff <= 45
+        m.hasHolidayReminder = true
+        if bestDiff = 0
+            m.holidayBadgeLabel.text = "TODAY'S HOLIDAY"
+            m.holidayTextLabel.text = bestH.badge
+            m.holidayTextLabel.color = "0xFFD54FFF"
+        else if bestDiff = 1
+            m.holidayBadgeLabel.text = "TOMORROW!"
+            m.holidayTextLabel.text = bestH.name + " is Tomorrow"
+            m.holidayTextLabel.color = "0xFFFFFFFF"
+        else
+            m.holidayBadgeLabel.text = "HOLIDAY REMINDER"
+            m.holidayTextLabel.text = bestDiff.ToStr() + " Days Until " + bestH.name
+            m.holidayTextLabel.color = "0xFFFFFFFF"
+        end if
+        if not m.toastGroup.visible then m.holidayGroup.visible = true
+    else
+        m.hasHolidayReminder = false
+        m.holidayGroup.visible = false
+    end if
 end sub
 
 sub applySlideshowSpeed(notify as Boolean)
@@ -900,6 +977,7 @@ sub showToast(title as String, message as String, subText = "" as String)
         m.toastSubLabel.text = "Press [UP / DOWN] to Change Genre   •   Press [ OK ] for 100 Stations"
     end if
     m.clockGroup.visible = false
+    m.holidayGroup.visible = false
     m.toastGroup.visible = true
     m.toastSlideAnim.control = "start"
     m.toastTimer.control = "stop"
@@ -909,6 +987,7 @@ end sub
 sub onToastTimerFire()
     m.toastGroup.visible = false
     m.clockGroup.visible = true
+    if m.hasHolidayReminder = true then m.holidayGroup.visible = true
 end sub
 
 ' =============================================================================
