@@ -328,14 +328,19 @@ function cleanSpeechText(rawText as String) as String
     if rawText = "" then return ""
     cleaned = rawText.Replace(Chr(10), " ").Replace(Chr(13), " ").Replace("#", "").Replace("*", "").Replace("_", " ")
     words = cleaned.Split(" ")
-    kept = []
+    outStr = ""
     for each w in words
-        lw = LCase(w.Trim())
+        tr = w.Trim()
+        lw = LCase(tr)
         if lw <> "" and Left(lw, 7) <> "http://" and Left(lw, 8) <> "https://"
-            kept.Push(w.Trim())
+            if outStr = ""
+                outStr = tr
+            else
+                outStr = outStr + " " + tr
+            end if
         end if
     end for
-    return kept.Join(" ")
+    return outStr
 end function
 
 sub triggerTwitchStyleFamilyAlert(senderName as String, msgText as String)
