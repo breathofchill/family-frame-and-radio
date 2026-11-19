@@ -1053,6 +1053,7 @@ sub onRadioTaskStatus()
 end sub
 
 sub syncRadioMuteState()
+    if m.radioPlayer.HasField("volume") then m.radioPlayer.volume = 65
     effectiveMute = (m.isMuted or m.isCommercialMuted or m.isTtsDucking or m.pendingRadioContent <> invalid)
     m.radioPlayer.mute = effectiveMute
     if effectiveMute
@@ -1547,6 +1548,7 @@ end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
     if not press then return false
+    if Left(LCase(key), 6) = "volume" then return false
     if m.isFamilyHubOpen
         if key = "back" or key = "OK" or key = "options"
             closeFamilyHubOverlay()
@@ -1598,6 +1600,7 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
 end function
 
 function handleStationsKeyEvent(key as String) as Boolean
+    if Left(LCase(key), 6) = "volume" then return false
     total = m.filteredStations.Count()
     if key = "back"
         closeStationsBrowser()
