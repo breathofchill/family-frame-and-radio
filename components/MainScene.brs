@@ -46,16 +46,22 @@ sub init()
     m.nowPlayingTimer = m.top.findNode("nowPlayingTimer")
     m.photoSyncTimer = m.top.findNode("photoSyncTimer")
     m.msgPollTimer = m.top.findNode("msgPollTimer")
+    m.ttsSpeakDelayTimer = m.top.findNode("ttsSpeakDelayTimer")
     m.ttsDuckTimer = m.top.findNode("ttsDuckTimer")
     m.stationFadeTimer = m.top.findNode("stationFadeTimer")
+    m.alertChime = m.top.findNode("alertChime")
     m.radioPlayer = m.top.findNode("radioPlayer")
 
     m.verseBannerGroup = m.top.findNode("verseBannerGroup")
+    m.verseOuterRect = m.top.findNode("verseOuterRect")
+    m.verseInnerRect = m.top.findNode("verseInnerRect")
     m.verseRefLabel = m.top.findNode("verseRefLabel")
     m.verseBodyLabel = m.top.findNode("verseBodyLabel")
     m.ttsAlertGroup = m.top.findNode("ttsAlertGroup")
     m.ttsAlertSenderLabel = m.top.findNode("ttsAlertSenderLabel")
     m.ttsAlertBodyLabel = m.top.findNode("ttsAlertBodyLabel")
+    m.ttsSlideAnim = m.top.findNode("ttsSlideAnim")
+    m.pendingTtsSpeech = ""
 
     m.familyInfoOverlay = m.top.findNode("familyInfoOverlay")
     m.sosAddressLabel = m.top.findNode("sosAddressLabel")
@@ -253,8 +259,39 @@ sub onFamilyHubStatus()
     if m.hubTask = invalid or m.hubTask.status <> "ready" then return
 
     if m.hubTask.verseText <> "" and m.verseBannerGroup <> invalid
+        verseStr = Chr(34) + m.hubTask.verseText + Chr(34)
         m.verseRefLabel.text = "VERSE OF THE DAY  •  " + UCase(m.hubTask.verseRef)
-        m.verseBodyLabel.text = Chr(34) + m.hubTask.verseText + Chr(34)
+        m.verseBodyLabel.text = verseStr
+
+        vLen = Len(verseStr)
+        if vLen > 240
+            m.verseBannerGroup.translation = [644, 652]
+            m.verseOuterRect.width = 1180
+            m.verseOuterRect.height = 204
+            m.verseInnerRect.width = 1174
+            m.verseInnerRect.height = 198
+            m.verseRefLabel.width = 1136
+            m.verseBodyLabel.width = 1136
+            m.verseBodyLabel.height = 150
+        else if vLen > 155
+            m.verseBannerGroup.translation = [684, 680]
+            m.verseOuterRect.width = 1140
+            m.verseOuterRect.height = 176
+            m.verseInnerRect.width = 1134
+            m.verseInnerRect.height = 170
+            m.verseRefLabel.width = 1096
+            m.verseBodyLabel.width = 1096
+            m.verseBodyLabel.height = 122
+        else
+            m.verseBannerGroup.translation = [704, 708]
+            m.verseOuterRect.width = 1120
+            m.verseOuterRect.height = 148
+            m.verseInnerRect.width = 1114
+            m.verseInnerRect.height = 142
+            m.verseRefLabel.width = 1076
+            m.verseBodyLabel.width = 1076
+            m.verseBodyLabel.height = 94
+        end if
         m.verseBannerGroup.visible = true
     end if
 
@@ -287,24 +324,75 @@ sub onFamilyHubStatus()
     end if
 end sub
 
+function cleanSpeechText(rawText as String) as String
+    if rawText = "" then return ""
+    cleaned = rawText.Replace(Chr(10), " ").Replace(Chr(13), " ").Replace("#", "").Replace("*", "").Replace("_", " ")
+    words = cleaned.Split(" ")
+    kept = []
+    for each w in words
+        lw = LCase(w.Trim())
+        if lw <> "" and Left(lw, 7) <> "http://" and Left(lw, 8) <> "https://"
+            kept.Push(w.Trim())
+        end if
+    end for
+    return kept.Join(" ")
+end function
+
 sub triggerTwitchStyleFamilyAlert(senderName as String, msgText as String)
     if senderName = "" then senderName = "Family"
     m.ttsAlertSenderLabel.text = "From " + senderName + ":"
     m.ttsAlertBodyLabel.text = Chr(34) + msgText + Chr(34)
     m.ttsAlertGroup.visible = true
+    if m.ttsSlideAnim <> invalid then m.ttsSlideAnim.control = "start"
 
-    ' Duck radio audio briefly while Roku Text-to-Speech reads the family message aloud
+    ' Cleanly mute/duck radio audio while chime + Roku TTS plays
     m.isTtsDucking = true
     syncRadioMuteState()
 
-    if m.ttsObj = invalid then m.ttsObj = CreateObject("roTextToSpeech")
-    if m.ttsObj <> invalid
-        spoken = "New family message from " + senderName + ". " + msgText
-        m.ttsObj.Say(spoken)
+    if m.alertChime <> invalid
+        m.alertChime.control = "stop"
+        m.alertChime.control = "play"
     end if
 
+    cleanBody = cleanSpeechText(msgText)
+    if cleanBody = "" then cleanBody = "Sent a new family message."
+    m.pendingTtsSpeech = senderName + " says, " + cleanBody
+
+    estSecs = 2.6 + (Len(m.pendingTtsSpeech) * 0.085)
+    if estSecs < 6.5 then estSecs = 6.5
+    if estSecs > 24.0 then estSecs = 24.0
+    m.ttsDuckTimer.duration = estSecs
+
+    m.ttsSpeakDelayTimer.control = "stop"
+    m.ttsSpeakDelayTimer.control = "start"
     m.ttsDuckTimer.control = "stop"
     m.ttsDuckTimer.control = "start"
+end sub
+
+sub onTtsSpeakDelayFire()
+    if m.pendingTtsSpeech = "" then return
+    if m.ttsObj = invalid
+        m.ttsObj = CreateObject("roTextToSpeech")
+        if m.ttsObj <> invalid
+            m.ttsObj.SetLanguage("en-US")
+            voices = m.ttsObj.GetAvailableVoices()
+            if type(voices) = "roArray" and voices.Count() > 0
+                for each v in voices
+                    if Instr(1, LCase(v), "en") > 0
+                        m.ttsObj.SetVoice(v)
+                        exit for
+                    end if
+                end for
+            end if
+            m.ttsObj.SetRate(-5)
+            m.ttsObj.SetPitch(4)
+            m.ttsObj.SetVolume(1000)
+        end if
+    end if
+    if m.ttsObj <> invalid
+        m.ttsObj.Flush()
+        m.ttsObj.Say(m.pendingTtsSpeech)
+    end if
 end sub
 
 sub onTtsDuckTimerFire()
@@ -994,7 +1082,7 @@ sub syncRadioMuteState()
     supportsVol = m.radioPlayer.HasField("volume")
     if supportsVol
         if m.isTtsDucking
-            m.radioPlayer.volume = 15
+            m.radioPlayer.volume = 5
         else
             m.radioPlayer.volume = 100
         end if

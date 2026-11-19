@@ -41,11 +41,11 @@
                 </Group>
 
                 <!-- Daily Bible Verse Card (Bottom-Right inside frame, #72) -->
-                <Group id="verseBannerGroup" translation="[920, 756]" visible="false">
-                    <Rectangle width="904" height="100" color="0xFFD54FBB" />
-                    <Rectangle translation="[3, 3]" width="898" height="94" color="0x090D16DE" />
-                    <Label id="verseRefLabel" translation="[18, 10]" width="862" height="24" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="VERSE OF THE DAY" />
-                    <Label id="verseBodyLabel" translation="[18, 36]" width="862" height="54" font="font:SmallestBoldSystemFont" color="0xFFFFFFFF" horizAlign="right" wrap="true" text="" />
+                <Group id="verseBannerGroup" translation="[704, 708]" visible="false">
+                    <Rectangle id="verseOuterRect" width="1120" height="148" color="0xFFD54FBB" />
+                    <Rectangle id="verseInnerRect" translation="[3, 3]" width="1114" height="142" color="0x090D16E4" />
+                    <Label id="verseRefLabel" translation="[22, 12]" width="1076" height="26" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="VERSE OF THE DAY" />
+                    <Label id="verseBodyLabel" translation="[22, 42]" width="1076" height="94" font="font:SmallestSystemFont" color="0xFFFFFFFF" horizAlign="right" wrap="true" text="" />
                 </Group>
             </Group>
         </Group>
@@ -349,15 +349,21 @@
             <FloatFieldInterpolator id="hudEqInterp3" key="[0.0, 0.5, 1.0]" keyValue="[10.0, 20.0, 10.0]" fieldToInterp="hudEqBar3.height" />
         </Animation>
 
-        <!-- Timers & Audio Player -->
+        <!-- Timers, Sound Effects & Audio Player -->
+        <Animation id="ttsSlideAnim" duration="0.28" easeFunction="outCubic">
+            <FloatFieldInterpolator id="ttsOpacityInterp" key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="ttsAlertGroup.opacity" />
+            <Vector2DFieldInterpolator id="ttsTransInterp" key="[0.0, 1.0]" keyValue="[[260, 8], [260, 42]]" fieldToInterp="ttsAlertGroup.translation" />
+        </Animation>
         <Timer id="slideshowTimer" repeat="true" duration="12.0" />
         <Timer id="toastTimer" repeat="false" duration="6.0" />
         <Timer id="clockTimer" repeat="true" duration="15.0" />
         <Timer id="nowPlayingTimer" repeat="true" duration="18.0" />
         <Timer id="photoSyncTimer" repeat="true" duration="1800.0" />
         <Timer id="msgPollTimer" repeat="true" duration="20.0" />
+        <Timer id="ttsSpeakDelayTimer" repeat="false" duration="0.55" />
         <Timer id="ttsDuckTimer" repeat="false" duration="9.0" />
         <Timer id="stationFadeTimer" repeat="false" duration="0.35" />
+        <SoundEffect id="alertChime" uri="pkg:/sounds/alert_chime.wav" volume="85" />
         <Audio id="radioPlayer" />
     </children>
 </component>
