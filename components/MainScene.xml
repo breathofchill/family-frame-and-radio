@@ -19,21 +19,26 @@
                 <Poster id="posterA" width="1860" height="896" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToZoom" scaleRotateCenter="[930, 448]" opacity="1.0" />
                 <Poster id="posterB" width="1860" height="896" loadWidth="1920" loadHeight="1080" loadDisplayMode="scaleToZoom" scaleRotateCenter="[930, 448]" opacity="0.0" />
 
-                <!-- 100 Family Trivia, History & Brain-Fitness Card (Bottom-Left inside frame, auto-rotating) -->
-                <Group id="triviaBannerGroup" translation="[36, 700]" visible="false">
-                    <Rectangle id="triviaOuterRect" width="720" height="156" color="0x80DEEABB" />
-                    <Rectangle id="triviaInnerRect" translation="[3, 3]" width="714" height="150" color="0x0A101EE4" />
-                    <Label id="triviaCatLabel" translation="[20, 10]" width="680" height="24" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" text="THIS DAY IN HISTORY  •  #1" />
-                    <Label id="triviaTopicLabel" translation="[20, 32]" width="680" height="28" font="font:SmallBoldSystemFont" color="0xFFD54FFF" text="The Golden Gate Bridge" />
-                    <Label id="triviaBodyLabel" translation="[20, 58]" width="680" height="88" font="font:SmallestSystemFont" color="0xFFFFFFFF" wrap="true" text="" />
-                </Group>
+                <!-- Unified Family Showcase Card: 100 Trivia & Brain Fitness (Left) + Verse of the Day (Right) -->
+                <Group id="verseBannerGroup" translation="[36, 696]" visible="false">
+                    <Rectangle id="verseOuterRect" width="1788" height="168" color="0xFFD54FBB" />
+                    <Rectangle id="verseInnerRect" translation="[3, 3]" width="1782" height="162" color="0x090D18F0" />
 
-                <!-- Daily Bible Verse Card (Bottom-Right inside frame, #72) -->
-                <Group id="verseBannerGroup" translation="[704, 708]" visible="false">
-                    <Rectangle id="verseOuterRect" width="1120" height="148" color="0xFFD54FBB" />
-                    <Rectangle id="verseInnerRect" translation="[3, 3]" width="1114" height="142" color="0x090D16E4" />
-                    <Label id="verseRefLabel" translation="[22, 12]" width="1076" height="26" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="VERSE OF THE DAY" />
-                    <Label id="verseBodyLabel" translation="[22, 42]" width="1076" height="94" font="font:SmallestSystemFont" color="0xFFFFFFFF" horizAlign="right" wrap="true" text="" />
+                    <!-- Left Half: 100 Family Trivia, Brain-Fitness & History (Auto-Rotating) -->
+                    <Group id="triviaBannerGroup" translation="[20, 12]">
+                        <Label id="triviaCatLabel" translation="[0, 0]" width="850" height="24" font="font:SmallestBoldSystemFont" color="0x80DEEAFF" text="THIS DAY IN HISTORY  •  #1 OF 100" />
+                        <Label id="triviaTopicLabel" translation="[0, 24]" width="850" height="28" font="font:SmallBoldSystemFont" color="0xFFD54FFF" text="The Golden Gate Bridge" />
+                        <Label id="triviaBodyLabel" translation="[0, 52]" width="850" height="96" font="font:SmallestSystemFont" color="0xFFFFFFFF" wrap="true" text="" />
+                    </Group>
+
+                    <!-- Subtle Center Divider -->
+                    <Rectangle translation="[894, 16]" width="2" height="136" color="0xFFFFFF22" />
+
+                    <!-- Right Half: Daily Bible Verse (#72) -->
+                    <Group translation="[918, 12]">
+                        <Label id="verseRefLabel" translation="[0, 0]" width="844" height="24" font="font:SmallestBoldSystemFont" color="0xFFD54FFF" horizAlign="right" text="VERSE OF THE DAY" />
+                        <Label id="verseBodyLabel" translation="[0, 30]" width="844" height="118" font="font:SmallestSystemFont" color="0xFFFFFFFF" horizAlign="right" wrap="true" text="" />
+                    </Group>
                 </Group>
             </Group>
         </Group>

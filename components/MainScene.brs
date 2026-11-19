@@ -8,7 +8,7 @@ sub init()
         "holidayGroup", "holidayBadgeLabel", "holidayTextLabel",
         "photoHeaderLabel", "photoCounterLabel", "photoSubLabel", "radioHeaderLabel", "radioStatusLabel", "nowPlayingLabel", "hudEqGroup", "hudAlbumGroup", "hudAlbumPoster",
         "slideshowTimer", "toastTimer", "clockTimer", "nowPlayingTimer", "photoSyncTimer", "msgPollTimer", "ttsDuckTimer", "stationFadeTimer", "triviaTimer", "radioPlayer", "ttsPlayer",
-        "triviaBannerGroup", "triviaOuterRect", "triviaInnerRect", "triviaCatLabel", "triviaTopicLabel", "triviaBodyLabel",
+        "triviaBannerGroup", "triviaCatLabel", "triviaTopicLabel", "triviaBodyLabel",
         "verseBannerGroup", "verseOuterRect", "verseInnerRect", "verseRefLabel", "verseBodyLabel",
         "ttsAlertGroup", "ttsAlertSenderLabel", "ttsAlertBodyLabel", "ttsSlideAnim",
         "familyInfoOverlay", "sosAddressLabel", "sosPrimaryLabel", "sosSecondaryLabel", "sosDoctorLabel", "sosPharmacyLabel", "sosNoteLabel",
@@ -216,22 +216,19 @@ sub onFamilyHubStatus()
         m.verseBodyLabel.text = verseStr
 
         vLen = Len(verseStr)
-        vd = [704, 700, 1120, 156]
-        if vLen > 300
-            vd = [584, 626, 1240, 230]
-        else if vLen > 200
-            vd = [644, 656, 1180, 200]
-        else if vLen > 120
-            vd = [684, 680, 1140, 176]
+        cardH = 168
+        cardY = 696
+        if vLen > 240
+            cardH = 196
+            cardY = 668
         end if
-        m.verseBannerGroup.translation = [vd[0], vd[1]]
-        m.verseOuterRect.width = vd[2]
-        m.verseOuterRect.height = vd[3]
-        m.verseInnerRect.width = vd[2] - 6
-        m.verseInnerRect.height = vd[3] - 6
-        m.verseRefLabel.width = vd[2] - 44
-        m.verseBodyLabel.width = vd[2] - 44
-        m.verseBodyLabel.height = vd[3] - 50
+        m.verseBannerGroup.translation = [36, cardY]
+        m.verseOuterRect.width = 1788
+        m.verseOuterRect.height = cardH
+        m.verseInnerRect.width = 1782
+        m.verseInnerRect.height = cardH - 6
+        m.verseBodyLabel.height = cardH - 50
+        m.triviaBodyLabel.height = cardH - 72
         m.verseBannerGroup.visible = true
     end if
 
@@ -646,48 +643,19 @@ sub showNextTriviaCard(cardIdx = -1 as Integer)
     end if
     m.triviaBodyLabel.text = cFact
 
-    ' Dynamic sizing so the entire fact fits perfectly without truncating or ellipsis
-    fLen = Len(cFact)
-    cardW = 740
-    cardH = 156
-    cardY = 700
-    if fLen > 140
-        cardH = 188
-        cardY = 668
-    else if fLen > 110
-        cardH = 166
-        cardY = 690
-    end if
-
-    m.triviaBannerGroup.translation = [36, cardY]
-    m.triviaOuterRect.width = cardW
-    m.triviaOuterRect.height = cardH
-    m.triviaInnerRect.width = cardW - 6
-    m.triviaInnerRect.height = cardH - 6
-    m.triviaCatLabel.width = cardW - 40
-    m.triviaTopicLabel.width = cardW - 40
-    m.triviaBodyLabel.width = cardW - 40
-    m.triviaBodyLabel.height = cardH - 64
-
-    ' Style border color subtly by category
+    ' Style unified border subtly by trivia category
     if InStr(1, cCat, "HISTORY") > 0
-        m.triviaOuterRect.color = "0xFFD54FBB"
         m.triviaCatLabel.color = "0xFFD54FFF"
     else if InStr(1, cCat, "RIDDLE") > 0 or InStr(1, cCat, "WORDPLAY") > 0
-        m.triviaOuterRect.color = "0x80DEEABB"
         m.triviaCatLabel.color = "0x80DEEAFF"
     else if InStr(1, cCat, "NATURE") > 0
-        m.triviaOuterRect.color = "0x00E676BB"
         m.triviaCatLabel.color = "0x00E676FF"
     else if InStr(1, cCat, "NOSTALGIA") > 0 or InStr(1, cCat, "INVENTIONS") > 0
-        m.triviaOuterRect.color = "0xFFB74DBB"
         m.triviaCatLabel.color = "0xFFB74DFF"
     else
-        m.triviaOuterRect.color = "0xBA68C8BB"
         m.triviaCatLabel.color = "0xCE93D8FF"
     end if
-
-    m.triviaBannerGroup.visible = true
+    m.verseBannerGroup.visible = true
 end sub
 
 sub onTriviaTimerFire()
