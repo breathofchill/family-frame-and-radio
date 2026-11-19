@@ -360,10 +360,8 @@
         <Timer id="nowPlayingTimer" repeat="true" duration="18.0" />
         <Timer id="photoSyncTimer" repeat="true" duration="1800.0" />
         <Timer id="msgPollTimer" repeat="true" duration="20.0" />
-        <Timer id="ttsSpeakDelayTimer" repeat="false" duration="0.55" />
         <Timer id="ttsDuckTimer" repeat="false" duration="9.0" />
         <Timer id="stationFadeTimer" repeat="false" duration="0.35" />
-        <SoundEffect id="alertChime" uri="pkg:/sounds/alert_chime.wav" volume="85" />
         <Audio id="radioPlayer" />
     </children>
 </component>

@@ -46,10 +46,8 @@ sub init()
     m.nowPlayingTimer = m.top.findNode("nowPlayingTimer")
     m.photoSyncTimer = m.top.findNode("photoSyncTimer")
     m.msgPollTimer = m.top.findNode("msgPollTimer")
-    m.ttsSpeakDelayTimer = m.top.findNode("ttsSpeakDelayTimer")
     m.ttsDuckTimer = m.top.findNode("ttsDuckTimer")
     m.stationFadeTimer = m.top.findNode("stationFadeTimer")
-    m.alertChime = m.top.findNode("alertChime")
     m.radioPlayer = m.top.findNode("radioPlayer")
 
     m.verseBannerGroup = m.top.findNode("verseBannerGroup")
@@ -61,7 +59,6 @@ sub init()
     m.ttsAlertSenderLabel = m.top.findNode("ttsAlertSenderLabel")
     m.ttsAlertBodyLabel = m.top.findNode("ttsAlertBodyLabel")
     m.ttsSlideAnim = m.top.findNode("ttsSlideAnim")
-    m.pendingTtsSpeech = ""
 
     m.familyInfoOverlay = m.top.findNode("familyInfoOverlay")
     m.sosAddressLabel = m.top.findNode("sosAddressLabel")
@@ -350,41 +347,26 @@ sub triggerTwitchStyleFamilyAlert(senderName as String, msgText as String)
     m.ttsAlertGroup.visible = true
     if m.ttsSlideAnim <> invalid then m.ttsSlideAnim.control = "start"
 
-    ' Cleanly mute/duck radio audio while chime + Roku TTS plays
+    ' Cleanly mute radio audio while Roku Text-to-Speech reads the family message aloud
     m.isTtsDucking = true
     syncRadioMuteState()
 
-    if m.alertChime <> invalid
-        m.alertChime.control = "stop"
-        m.alertChime.control = "play"
+    cleanBody = cleanSpeechText(msgText)
+    if cleanBody = "" then cleanBody = msgText
+    spoken = "Message from " + senderName + ". " + cleanBody
+
+    if m.ttsObj = invalid then m.ttsObj = CreateObject("roTextToSpeech")
+    if m.ttsObj <> invalid
+        m.ttsObj.Say(spoken)
     end if
 
-    cleanBody = cleanSpeechText(msgText)
-    if cleanBody = "" then cleanBody = "Sent a new family message."
-    m.pendingTtsSpeech = senderName + " says, " + cleanBody
-
-    estSecs = 2.6 + (Len(m.pendingTtsSpeech) * 0.085)
+    estSecs = 2.5 + (Len(spoken) * 0.085)
     if estSecs < 6.5 then estSecs = 6.5
     if estSecs > 24.0 then estSecs = 24.0
     m.ttsDuckTimer.duration = estSecs
 
-    m.ttsSpeakDelayTimer.control = "stop"
-    m.ttsSpeakDelayTimer.control = "start"
     m.ttsDuckTimer.control = "stop"
     m.ttsDuckTimer.control = "start"
-end sub
-
-sub onTtsSpeakDelayFire()
-    if m.pendingTtsSpeech = "" then return
-    if m.ttsObj = invalid
-        m.ttsObj = CreateObject("roTextToSpeech")
-    end if
-    if m.ttsObj <> invalid
-        m.ttsObj.SetVolume(1000)
-        m.ttsObj.SetRate(-5)
-        m.ttsObj.SetPitch(3)
-        m.ttsObj.Say(m.pendingTtsSpeech)
-    end if
 end sub
 
 sub onTtsDuckTimerFire()
@@ -1071,18 +1053,7 @@ sub onRadioTaskStatus()
 end sub
 
 sub syncRadioMuteState()
-    supportsVol = m.radioPlayer.HasField("volume")
-    if supportsVol
-        if m.isTtsDucking
-            m.radioPlayer.volume = 5
-        else
-            m.radioPlayer.volume = 100
-        end if
-        effectiveMute = (m.isMuted or m.isCommercialMuted or m.pendingRadioContent <> invalid)
-    else
-        effectiveMute = (m.isMuted or m.isCommercialMuted or m.isTtsDucking or m.pendingRadioContent <> invalid)
-    end if
-
+    effectiveMute = (m.isMuted or m.isCommercialMuted or m.isTtsDucking or m.pendingRadioContent <> invalid)
     m.radioPlayer.mute = effectiveMute
     if effectiveMute
         m.eqPulseAnim.control = "stop"
