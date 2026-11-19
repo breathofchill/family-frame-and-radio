@@ -49,6 +49,9 @@ sub init()
     m.ttsDuckTimer = m.top.findNode("ttsDuckTimer")
     m.stationFadeTimer = m.top.findNode("stationFadeTimer")
     m.radioPlayer = m.top.findNode("radioPlayer")
+    m.ttsPlayer = m.top.findNode("ttsPlayer")
+    m.savedRadioContent = invalid
+    m.pendingTtsText = ""
 
     m.verseBannerGroup = m.top.findNode("verseBannerGroup")
     m.verseOuterRect = m.top.findNode("verseOuterRect")
@@ -214,6 +217,7 @@ sub init()
     m.ttsDuckTimer.ObserveField("fire", "onTtsDuckTimerFire")
     m.stationFadeTimer.ObserveField("fire", "onStationFadeTimerFire")
     m.radioPlayer.ObserveField("state", "onAudioStateChange")
+    m.ttsPlayer.ObserveField("state", "onTtsPlayerStateChange")
     m.radioPlayer.ObserveField("timedMetaData", "onTimedMetaData")
     m.radioPlayer.ObserveField("timedMetaData2", "onTimedMetaData")
     m.fadeAtoB.ObserveField("state", "onFadeAtoBState")
@@ -347,32 +351,77 @@ sub triggerTwitchStyleFamilyAlert(senderName as String, msgText as String)
     m.ttsAlertGroup.visible = true
     if m.ttsSlideAnim <> invalid then m.ttsSlideAnim.control = "start"
 
-    ' Cleanly mute radio audio while Roku Text-to-Speech reads the family message aloud
-    m.isTtsDucking = true
-    syncRadioMuteState()
-
     cleanBody = cleanSpeechText(msgText)
     if cleanBody = "" then cleanBody = msgText
     spoken = "Message from " + senderName + ". " + cleanBody
+    if Len(spoken) > 190 then spoken = Left(spoken, 187) + "..."
+    m.pendingTtsText = spoken
 
-    if m.ttsObj = invalid then m.ttsObj = CreateObject("roTextToSpeech")
-    if m.ttsObj <> invalid
-        m.ttsObj.Say(spoken)
+    ' Pause/stop radio decoder cleanly so ttsPlayer gets exclusive hardware audio playback
+    m.isTtsDucking = true
+    if m.radioPlayer.content <> invalid
+        m.savedRadioContent = m.radioPlayer.content
     end if
+    m.radioPlayer.control = "stop"
+    m.eqPulseAnim.control = "stop"
+    m.hudEqGroup.visible = false
 
-    estSecs = 2.5 + (Len(spoken) * 0.085)
-    if estSecs < 6.5 then estSecs = 6.5
-    if estSecs > 24.0 then estSecs = 24.0
-    m.ttsDuckTimer.duration = estSecs
+    xfer = CreateObject("roUrlTransfer")
+    escapedQ = xfer.Escape(spoken)
+    ttsUrl = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=" + escapedQ
 
+    ttsContent = CreateObject("roSGNode", "ContentNode")
+    ttsContent.url = ttsUrl
+    ttsContent.streamFormat = "mp3"
+    ttsContent.live = false
+
+    m.ttsPlayer.control = "stop"
+    m.ttsPlayer.content = ttsContent
+    m.ttsPlayer.mute = false
+    if m.ttsPlayer.HasField("volume") then m.ttsPlayer.volume = 85
+    m.ttsPlayer.control = "play"
+
+    ' Safety timeout in case stream hangs
+    m.ttsDuckTimer.duration = 20.0
     m.ttsDuckTimer.control = "stop"
     m.ttsDuckTimer.control = "start"
 end sub
 
-sub onTtsDuckTimerFire()
+sub onTtsPlayerStateChange()
+    if m.ttsPlayer = invalid or not m.isTtsDucking then return
+    st = m.ttsPlayer.state
+    if st = "finished"
+        finishTtsAlert()
+    else if st = "error"
+        ' Fallback to built-in Roku TTS if network TTS stream fails
+        if m.ttsObj = invalid then m.ttsObj = CreateObject("roTextToSpeech")
+        if m.ttsObj <> invalid and m.pendingTtsText <> ""
+            m.ttsObj.Say(m.pendingTtsText)
+        end if
+        m.ttsDuckTimer.duration = 8.0
+        m.ttsDuckTimer.control = "stop"
+        m.ttsDuckTimer.control = "start"
+    end if
+end sub
+
+sub finishTtsAlert()
+    m.ttsDuckTimer.control = "stop"
+    if m.ttsPlayer <> invalid then m.ttsPlayer.control = "stop"
     m.ttsAlertGroup.visible = false
     m.isTtsDucking = false
-    syncRadioMuteState()
+    m.pendingTtsText = ""
+
+    if m.savedRadioContent <> invalid
+        m.radioPlayer.content = m.savedRadioContent
+        syncRadioMuteState()
+        m.radioPlayer.control = "play"
+    else
+        syncRadioMuteState()
+    end if
+end sub
+
+sub onTtsDuckTimerFire()
+    finishTtsAlert()
 end sub
 
 sub syncCloudPhotos()

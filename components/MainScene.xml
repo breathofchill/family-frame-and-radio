@@ -363,5 +363,6 @@
         <Timer id="ttsDuckTimer" repeat="false" duration="9.0" />
         <Timer id="stationFadeTimer" repeat="false" duration="0.35" />
         <Audio id="radioPlayer" />
+        <Audio id="ttsPlayer" />
     </children>
 </component>
