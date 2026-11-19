@@ -8,6 +8,7 @@
         <field id="msgSender" type="string" value="" />
         <field id="msgText" type="string" value="" />
         <field id="contacts" type="assocarray" />
+        <field id="triviaCards" type="array" />
         <field id="status" type="string" value="" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/FamilyHubTask.brs" />

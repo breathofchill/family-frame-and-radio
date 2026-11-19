@@ -5,9 +5,10 @@ sub init()
         "posterA", "posterB", "fadeAtoB", "fadeBtoA", "kenBurnsA", "kenBurnsB", "photoProgressAnim", "photoProgressBar", "emptyStateGroup",
         "toastGroup", "toastTitleLabel", "toastMessageLabel", "toastSubLabel", "toastSlideAnim",
         "clockGroup", "clockGreetingLabel", "clockTimeLabel", "clockDateLabel",
-        "holidayGroup", "holidayBadgeLabel", "holidayTextLabel", "holidayEffectGroup", "holidayEmblemIcon", "holidayEmblemTitle", "holidayFxAnim",
+        "holidayGroup", "holidayBadgeLabel", "holidayTextLabel",
         "photoHeaderLabel", "photoCounterLabel", "photoSubLabel", "radioHeaderLabel", "radioStatusLabel", "nowPlayingLabel", "hudEqGroup", "hudAlbumGroup", "hudAlbumPoster",
-        "slideshowTimer", "toastTimer", "clockTimer", "nowPlayingTimer", "photoSyncTimer", "msgPollTimer", "ttsDuckTimer", "stationFadeTimer", "radioPlayer", "ttsPlayer",
+        "slideshowTimer", "toastTimer", "clockTimer", "nowPlayingTimer", "photoSyncTimer", "msgPollTimer", "ttsDuckTimer", "stationFadeTimer", "triviaTimer", "radioPlayer", "ttsPlayer",
+        "triviaBannerGroup", "triviaOuterRect", "triviaInnerRect", "triviaCatLabel", "triviaTopicLabel", "triviaBodyLabel",
         "verseBannerGroup", "verseOuterRect", "verseInnerRect", "verseRefLabel", "verseBodyLabel",
         "ttsAlertGroup", "ttsAlertSenderLabel", "ttsAlertBodyLabel", "ttsSlideAnim",
         "familyInfoOverlay", "sosAddressLabel", "sosPrimaryLabel", "sosSecondaryLabel", "sosDoctorLabel", "sosPharmacyLabel", "sosNoteLabel",
@@ -21,16 +22,12 @@ sub init()
         m[nid] = m.top.findNode(nid)
     end for
 
-    m.fxParticles = []
-    for i = 1 to 12
-        p = m.top.findNode("fxP" + i.ToStr())
-        if p <> invalid then m.fxParticles.Push(p)
-    end for
-
     m.savedRadioContent = invalid
     m.pendingTtsText = ""
     m.isAppActive = true
     m.pendingFamilyAlert = invalid
+    m.triviaCards = get100FamilyTriviaCards()
+    m.currentTriviaIdx = 0
     m.orderedPhotos = []
     m.photos = []
     m.currentPhotoIndex = 0
@@ -135,6 +132,7 @@ sub init()
         [m.msgPollTimer, "fire", "pollFamilyMessages"],
         [m.ttsDuckTimer, "fire", "onTtsDuckTimerFire"],
         [m.stationFadeTimer, "fire", "onStationFadeTimerFire"],
+        [m.triviaTimer, "fire", "onTriviaTimerFire"],
         [m.radioPlayer, "state", "onAudioStateChange"],
         [m.ttsPlayer, "state", "onTtsPlayerStateChange"],
         [m.radioPlayer, "timedMetaData", "onTimedMetaData"],
@@ -153,7 +151,8 @@ sub init()
     loadSavedPreferences()
     applySlideshowSpeed(false)
     updateLivingRoomClock()
-    for each tmr in [m.clockTimer, m.nowPlayingTimer, m.photoSyncTimer, m.msgPollTimer, m.eqPulseAnim]
+    showNextTriviaCard()
+    for each tmr in [m.clockTimer, m.nowPlayingTimer, m.photoSyncTimer, m.msgPollTimer, m.triviaTimer, m.eqPulseAnim]
         tmr.control = "start"
     end for
     discoverPhotos()
@@ -242,6 +241,10 @@ sub onFamilyHubStatus()
         if c.DoesExist("doctorName") then m.sosDoctorLabel.text = "Doctor: " + c.doctorName + "   •   " + c.doctorPhone
         if c.DoesExist("pharmacyName") then m.sosPharmacyLabel.text = "Pharmacy: " + c.pharmacyName + "   •   " + c.pharmacyPhone
         if c.DoesExist("notes") then m.sosNoteLabel.text = c.notes
+    end if
+
+    if type(m.hubTask.triviaCards) = "roArray" and m.hubTask.triviaCards.Count() > 0
+        m.triviaCards = m.hubTask.triviaCards
     end if
 
     if m.hubTask.msgId <> "" and m.hubTask.msgText <> ""
@@ -605,106 +608,65 @@ sub updateHolidayReminder(dt as Object)
             m.holidayTextLabel.color = "0xFFFFFFFF"
         end if
         if not m.toastGroup.visible then m.holidayGroup.visible = true
-        applyHolidayAtmosphere(bestH, bestDiff)
     else
         m.hasHolidayReminder = false
         m.holidayGroup.visible = false
-        if m.holidayEffectGroup <> invalid then m.holidayEffectGroup.visible = false
-        if m.holidayFxAnim <> invalid then m.holidayFxAnim.control = "stop"
     end if
 end sub
 
-sub applyHolidayAtmosphere(holidayObj as Object, diffDays as Integer)
-    if m.holidayEffectGroup = invalid or m.holidayFxAnim = invalid then return
-    hName = holidayObj.name
+sub showNextTriviaCard(cardIdx = -1 as Integer)
+    if m.triviaCards = invalid or m.triviaCards.Count() = 0 then return
+    if m.triviaBannerGroup = invalid then return
 
-    ' Trigger atmosphere for holidays within 14 days (or active day of)
-    if diffDays > 14
-        m.holidayEffectGroup.visible = false
-        m.holidayFxAnim.control = "stop"
-        return
-    end if
-
-    m.holidayEffectGroup.visible = true
-    m.holidayFxAnim.control = "start"
-
-    if hName = "Thanksgiving"
-        m.holidayEmblemIcon.text = "TURKEY & CORNUCOPIA"
-        if diffDays = 0
-            m.holidayEmblemTitle.text = "Happy Thanksgiving Feast!"
-        else
-            m.holidayEmblemTitle.text = "Harvest & Thanksgiving"
-        end if
-        ' Golden Autumn Harvest Leaves particle theme
-        palette = ["0xFFB300EE", "0xFF8F00EE", "0xD84315EE", "0xE65100EE", "0xF4511EEE", "0xFFC107EE"]
-        for i = 0 to m.fxParticles.Count() - 1
-            p = m.fxParticles[i]
-            p.color = palette[i mod palette.Count()]
-            p.width = 12
-            p.height = 7
-        end for
-    else if hName = "Christmas Day" or hName = "Christmas Eve"
-        m.holidayEmblemIcon.text = "WINTER SNOW & PINES"
-        if diffDays = 0
-            m.holidayEmblemTitle.text = "Merry Christmas Day!"
-        else
-            m.holidayEmblemTitle.text = "Christmas Season"
-        end if
-        ' Gentle Falling White & Ice-Blue Snowflakes
-        palette = ["0xFFFFFFFF", "0xE0F7FAEE", "0xE1F5FFEE", "0xBBDEFBEE", "0xFFFFFFDD", "0xE0F2F1EE"]
-        for i = 0 to m.fxParticles.Count() - 1
-            p = m.fxParticles[i]
-            p.color = palette[i mod palette.Count()]
-            p.width = 8 + (i mod 5)
-            p.height = p.width
-        end for
-    else if hName = "4th of July"
-        m.holidayEmblemIcon.text = "FIREWORKS & SPARKLERS"
-        if diffDays = 0
-            m.holidayEmblemTitle.text = "Happy 4th of July!"
-        else
-            m.holidayEmblemTitle.text = "Independence Celebration"
-        end if
-        ' Red, White & Blue Fireworks Sparks
-        palette = ["0xFF1744FF", "0xFFFFFFFF", "0x2979FFFF", "0xFF5252FF", "0xFFD600FF", "0x00E676FF"]
-        for i = 0 to m.fxParticles.Count() - 1
-            p = m.fxParticles[i]
-            p.color = palette[i mod palette.Count()]
-            p.width = 6 + (i mod 6)
-            p.height = 6 + (i mod 6)
-        end for
-    else if hName = "New Year's Eve" or hName = "New Year's Day"
-        m.holidayEmblemIcon.text = "GOLDEN PARTY CONFETTI"
-        m.holidayEmblemTitle.text = "Happy New Year!"
-        ' Gold, Silver & Emerald Celebration Confetti
-        palette = ["0xFFD54FFF", "0xFFC107FF", "0xFFFFFFFF", "0x00E676FF", "0xFFEE58FF", "0xFFD700FF"]
-        for i = 0 to m.fxParticles.Count() - 1
-            p = m.fxParticles[i]
-            p.color = palette[i mod palette.Count()]
-            p.width = 10
-            p.height = 6
-        end for
-    else if hName = "Halloween"
-        m.holidayEmblemIcon.text = "JACK-O'-LANTERN"
-        m.holidayEmblemTitle.text = "Happy Halloween!"
-        palette = ["0xFF6D00FF", "0xFFAB00FF", "0x7C4DFFFF", "0xFF3D00FF", "0x00E676FF", "0x212121FF"]
-        for i = 0 to m.fxParticles.Count() - 1
-            p = m.fxParticles[i]
-            p.color = palette[i mod palette.Count()]
-            p.width = 10
-            p.height = 10
-        end for
+    if cardIdx >= 0
+        m.currentTriviaIdx = cardIdx mod m.triviaCards.Count()
     else
-        m.holidayEmblemIcon.text = "HOLIDAY CELEBRATION"
-        m.holidayEmblemTitle.text = holidayObj.name
-        palette = ["0xFFD54FFF", "0xFFFFFFFF", "0x80DEEAFF", "0xF48FB1FF"]
-        for i = 0 to m.fxParticles.Count() - 1
-            p = m.fxParticles[i]
-            p.color = palette[i mod palette.Count()]
-            p.width = 8
-            p.height = 8
-        end for
+        m.currentTriviaIdx = (m.currentTriviaIdx + 1) mod m.triviaCards.Count()
     end if
+
+    card = m.triviaCards[m.currentTriviaIdx]
+    cId = m.currentTriviaIdx + 1
+    if card.DoesExist("id") and card.id <> invalid then cId = card.id
+
+    cCat = "DAILY FAMILY TRIVIA"
+    if card.DoesExist("cat") and card.cat <> "" then cCat = UCase(card.cat)
+    m.triviaCatLabel.text = cCat + "  •  #" + cId.ToStr() + " OF 100"
+
+    cTopic = ""
+    if card.DoesExist("topic") and card.topic <> "" then cTopic = card.topic
+    m.triviaTopicLabel.text = cTopic
+
+    cFact = ""
+    if card.DoesExist("fact") and card.fact <> ""
+        cFact = card.fact
+    else if card.DoesExist("text") and card.text <> ""
+        cFact = card.text
+    end if
+    m.triviaBodyLabel.text = cFact
+
+    ' Style border color subtly by category
+    if InStr(1, cCat, "HISTORY") > 0
+        m.triviaOuterRect.color = "0xFFD54FBB"
+        m.triviaCatLabel.color = "0xFFD54FFF"
+    else if InStr(1, cCat, "RIDDLE") > 0 or InStr(1, cCat, "WORDPLAY") > 0
+        m.triviaOuterRect.color = "0x80DEEABB"
+        m.triviaCatLabel.color = "0x80DEEAFF"
+    else if InStr(1, cCat, "NATURE") > 0
+        m.triviaOuterRect.color = "0x00E676BB"
+        m.triviaCatLabel.color = "0x00E676FF"
+    else if InStr(1, cCat, "NOSTALGIA") > 0 or InStr(1, cCat, "INVENTIONS") > 0
+        m.triviaOuterRect.color = "0xFFB74DBB"
+        m.triviaCatLabel.color = "0xFFB74DFF"
+    else
+        m.triviaOuterRect.color = "0xBA68C8BB"
+        m.triviaCatLabel.color = "0xCE93D8FF"
+    end if
+
+    m.triviaBannerGroup.visible = true
+end sub
+
+sub onTriviaTimerFire()
+    showNextTriviaCard()
 end sub
 
 sub applySlideshowSpeed(notify as Boolean)

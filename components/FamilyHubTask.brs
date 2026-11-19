@@ -18,7 +18,21 @@ sub runFamilyHubSync()
         fetchEmergencyContacts()
     end if
 
+    if runMode = "all" or runMode = "trivia"
+        fetchTriviaCards()
+    end if
+
     m.top.status = "ready"
+end sub
+
+sub fetchTriviaCards()
+    raw = httpGetJson("https://raw.githubusercontent.com/breathofchill/family-frame-and-radio/main/family_trivia.json", 4000)
+    if raw <> invalid
+        parsed = ParseJson(raw)
+        if type(parsed) = "roAssociativeArray" and parsed.DoesExist("cards") and type(parsed.cards) = "roArray" and parsed.cards.Count() > 0
+            m.top.triviaCards = parsed.cards
+        end if
+    end if
 end sub
 
 function httpGetJson(url as String, timeoutMs = 5000 as Integer) as Dynamic
