@@ -5,6 +5,10 @@ sub init()
     m.posterB = m.top.findNode("posterB")
     m.fadeAtoB = m.top.findNode("fadeAtoB")
     m.fadeBtoA = m.top.findNode("fadeBtoA")
+    m.kenBurnsA = m.top.findNode("kenBurnsA")
+    m.kenBurnsB = m.top.findNode("kenBurnsB")
+    m.photoProgressAnim = m.top.findNode("photoProgressAnim")
+    m.photoProgressBar = m.top.findNode("photoProgressBar")
     m.emptyStateGroup = m.top.findNode("emptyStateGroup")
     m.toastGroup = m.top.findNode("toastGroup")
     m.toastTitleLabel = m.top.findNode("toastTitleLabel")
@@ -12,6 +16,7 @@ sub init()
     m.toastSubLabel = m.top.findNode("toastSubLabel")
     m.toastSlideAnim = m.top.findNode("toastSlideAnim")
     m.clockGroup = m.top.findNode("clockGroup")
+    m.clockGreetingLabel = m.top.findNode("clockGreetingLabel")
     m.clockTimeLabel = m.top.findNode("clockTimeLabel")
     m.clockDateLabel = m.top.findNode("clockDateLabel")
     m.photoHeaderLabel = m.top.findNode("photoHeaderLabel")
@@ -20,6 +25,7 @@ sub init()
     m.radioHeaderLabel = m.top.findNode("radioHeaderLabel")
     m.radioStatusLabel = m.top.findNode("radioStatusLabel")
     m.nowPlayingLabel = m.top.findNode("nowPlayingLabel")
+    m.hudEqGroup = m.top.findNode("hudEqGroup")
     m.hudAlbumGroup = m.top.findNode("hudAlbumGroup")
     m.hudAlbumPoster = m.top.findNode("hudAlbumPoster")
     m.slideshowTimer = m.top.findNode("slideshowTimer")
@@ -42,12 +48,17 @@ sub init()
     m.searchBoxBg = m.top.findNode("searchBoxBg")
     m.micBadgeBg = m.top.findNode("micBadgeBg")
     m.searchBoxLabel = m.top.findNode("searchBoxLabel")
-    m.showAllBtnGroup = m.top.findNode("showAllBtnGroup")
     m.showAllBtnBorder = m.top.findNode("showAllBtnBorder")
     m.showAllBtnBg = m.top.findNode("showAllBtnBg")
+    m.favBtnBorder = m.top.findNode("favBtnBorder")
+    m.favBtnBg = m.top.findNode("favBtnBg")
+    m.favBtnLabel = m.top.findNode("favBtnLabel")
     m.shuffleBtnBorder = m.top.findNode("shuffleBtnBorder")
     m.shuffleBtnBg = m.top.findNode("shuffleBtnBg")
     m.shuffleBtnLabel = m.top.findNode("shuffleBtnLabel")
+    m.speedBtnBorder = m.top.findNode("speedBtnBorder")
+    m.speedBtnBg = m.top.findNode("speedBtnBg")
+    m.speedBtnLabel = m.top.findNode("speedBtnLabel")
     m.stationsGridGroup = m.top.findNode("stationsGridGroup")
     m.gridFocusRing = m.top.findNode("gridFocusRing")
     m.stationsEmptyLabel = m.top.findNode("stationsEmptyLabel")
@@ -70,12 +81,17 @@ sub init()
     m.activePoster = "A"
     m.isSlideshowPaused = false
     m.isShuffleMode = false
+    m.speedOptions = [8, 12, 20, 30]
+    m.speedIdx = 1
     m.pendingPoster = ""
     m.currentSongTitle = ""
     m.currentVibeIndex = 0
     m.currentStationList = []
     m.currentStationIndex = 0
     m.isMuted = false
+    m.favoriteUrls = {}
+    m.isShowingFavorites = false
+    m.retryCount = 0
 
     m.allStations = getAll100Stations()
     m.filteredStations = m.allStations
@@ -162,12 +178,17 @@ sub init()
     m.heroAlbumPoster.ObserveField("loadStatus", "onAlbumArtLoadStatus")
     m.overlayCloseAnim.ObserveField("state", "onOverlayCloseAnimState")
 
+    loadSavedPreferences()
+    applySlideshowSpeed(false)
     updateLivingRoomClock()
     m.clockTimer.control = "start"
     m.nowPlayingTimer.control = "start"
     m.eqPulseAnim.control = "start"
     discoverPhotos()
-    loadCurrentVibe()
+
+    if not resumeSavedStation()
+        loadCurrentVibe()
+    end if
 end sub
 
 function addNode(parent as Object, nodeType as String, fields as Object) as Object
@@ -178,7 +199,112 @@ function addNode(parent as Object, nodeType as String, fields as Object) as Obje
 end function
 
 ' =============================================================================
-' LIVING-ROOM CLOCK & 200+ PHOTO SLIDESHOW ENGINE
+' PERSISTENT PREFERENCES (REMEMBERS STATION, FAVORITES, SPEED & SHUFFLE)
+' =============================================================================
+
+sub loadSavedPreferences()
+    sec = CreateObject("roRegistrySection", "FamilyFramePrefs")
+    if sec = invalid then return
+
+    if sec.Exists("speedIdx")
+        idxVal = Int(Val(sec.Read("speedIdx")))
+        if idxVal >= 0 and idxVal < m.speedOptions.Count() then m.speedIdx = idxVal
+    end if
+
+    if sec.Exists("shuffleMode") and sec.Read("shuffleMode") = "1"
+        m.isShuffleMode = true
+    end if
+
+    if sec.Exists("favoritesJson")
+        parsed = ParseJson(sec.Read("favoritesJson"))
+        if type(parsed) = "roArray"
+            for each u in parsed
+                if type(u) = "roString" or type(u) = "String" then m.favoriteUrls[u] = true
+            end for
+        end if
+    end if
+end sub
+
+sub savePreferences()
+    sec = CreateObject("roRegistrySection", "FamilyFramePrefs")
+    if sec = invalid then return
+    sec.Write("speedIdx", m.speedIdx.ToStr())
+    if m.isShuffleMode
+        sec.Write("shuffleMode", "1")
+    else
+        sec.Write("shuffleMode", "0")
+    end if
+
+    favArr = []
+    for each u in m.favoriteUrls
+        if m.favoriteUrls[u] = true then favArr.Push(u)
+    end for
+    sec.Write("favoritesJson", FormatJson(favArr))
+    sec.Flush()
+end sub
+
+sub saveLastStation(st as Object, genreLabel as String)
+    sec = CreateObject("roRegistrySection", "FamilyFramePrefs")
+    if sec = invalid or st = invalid then return
+    sec.Write("lastUrl", st.url)
+    sec.Write("lastName", st.name)
+    sec.Write("lastGenre", genreLabel)
+    fmt = "mp3"
+    if st.DoesExist("format") and st.format <> "" then fmt = st.format
+    sec.Write("lastFormat", fmt)
+    sec.Flush()
+end sub
+
+function resumeSavedStation() as Boolean
+    sec = CreateObject("roRegistrySection", "FamilyFramePrefs")
+    if sec = invalid or not sec.Exists("lastUrl") then return false
+    savedUrl = sec.Read("lastUrl")
+    if savedUrl = "" then return false
+    savedName = sec.Read("lastName")
+    savedGenre = sec.Read("lastGenre")
+    savedFmt = sec.Read("lastFormat")
+    if savedFmt = "" then savedFmt = "mp3"
+    st = { name: savedName, url: savedUrl, genre: savedGenre, format: savedFmt }
+    playStationFromCatalog(st)
+    showToast("WELCOME BACK", savedName, "Resumed Your Last Station  •  Press [OK] for 100 Stations & Favorites")
+    return true
+end function
+
+function getFavoritesCount() as Integer
+    cnt = 0
+    for each u in m.favoriteUrls
+        if m.favoriteUrls[u] = true then cnt = cnt + 1
+    end for
+    return cnt
+end function
+
+sub toggleFavoriteStation(st as Object)
+    if st = invalid or not st.DoesExist("url") then return
+    if m.favoriteUrls.DoesExist(st.url) and m.favoriteUrls[st.url] = true
+        m.favoriteUrls.Delete(st.url)
+    else
+        m.favoriteUrls[st.url] = true
+    end if
+    savePreferences()
+    if m.isShowingFavorites then applyFavoritesFilter()
+    renderStationsGrid(false, 0)
+end sub
+
+sub applyFavoritesFilter()
+    m.isShowingFavorites = true
+    m.stationsSearchQuery = ""
+    m.stationsSelectedIdx = 0
+    favs = []
+    for each st in m.allStations
+        if m.favoriteUrls.DoesExist(st.url) and m.favoriteUrls[st.url] = true
+            favs.Push(st)
+        end if
+    end for
+    m.filteredStations = favs
+end sub
+
+' =============================================================================
+' LIVING-ROOM CLOCK, GREETING & CINEMA KEN BURNS PHOTO SLIDESHOW ENGINE
 ' =============================================================================
 
 sub updateLivingRoomClock()
@@ -186,6 +312,15 @@ sub updateLivingRoomClock()
     dt.ToLocalTime()
     h24 = dt.GetHours()
     mnt = dt.GetMinutes()
+
+    if h24 >= 5 and h24 < 12
+        m.clockGreetingLabel.text = "GOOD MORNING"
+    else if h24 >= 12 and h24 < 17
+        m.clockGreetingLabel.text = "GOOD AFTERNOON"
+    else
+        m.clockGreetingLabel.text = "GOOD EVENING"
+    end if
+
     ampm = "AM"
     if h24 >= 12 then ampm = "PM"
     h12 = h24 mod 12
@@ -198,6 +333,51 @@ sub updateLivingRoomClock()
     mName = "Jan"
     if mIdx >= 0 and mIdx < months.Count() then mName = months[mIdx]
     m.clockDateLabel.text = dt.GetWeekday() + ", " + mName + " " + dt.GetDayOfMonth().ToStr()
+end sub
+
+sub applySlideshowSpeed(notify as Boolean)
+    secs = m.speedOptions[m.speedIdx]
+    m.slideshowTimer.duration = secs * 1.0
+    m.kenBurnsA.duration = secs * 1.0
+    m.kenBurnsB.duration = secs * 1.0
+    m.photoProgressAnim.duration = secs * 1.0
+    if not m.isSlideshowPaused and m.photos.Count() > 1
+        resetSlideshowTimer()
+        restartPhotoProgress()
+    end if
+    updatePhotoCounterHUD()
+    if notify
+        savePreferences()
+        showToast("SLIDESHOW SPEED", "Showing Each Photo for " + secs.ToStr() + " Seconds", "Press [OK] Anytime to Adjust Speed, Shuffle, or Stations")
+    end if
+end sub
+
+sub cycleSlideshowSpeed()
+    m.speedIdx = (m.speedIdx + 1) mod m.speedOptions.Count()
+    applySlideshowSpeed(true)
+end sub
+
+sub startKenBurnsForActivePoster()
+    if m.isSlideshowPaused then return
+    if m.activePoster = "A"
+        m.kenBurnsB.control = "stop"
+        m.posterA.scale = [1.0, 1.0]
+        m.kenBurnsA.control = "stop"
+        m.kenBurnsA.control = "start"
+    else
+        m.kenBurnsA.control = "stop"
+        m.posterB.scale = [1.0, 1.0]
+        m.kenBurnsB.control = "stop"
+        m.kenBurnsB.control = "start"
+    end if
+end sub
+
+sub restartPhotoProgress()
+    m.photoProgressAnim.control = "stop"
+    m.photoProgressBar.width = 0
+    if not m.isSlideshowPaused and m.photos.Count() > 1
+        m.photoProgressAnim.control = "start"
+    end if
 end sub
 
 sub discoverPhotos()
@@ -220,21 +400,52 @@ sub discoverPhotos()
         end for
     end if
 
+    if m.isShuffleMode and m.photos.Count() > 1
+        shuffleCurrentPhotoList("")
+    end if
+
     if m.photos.Count() = 0
         m.emptyStateGroup.visible = true
         m.photoCounterLabel.text = "No Photos Found"
         m.slideshowTimer.control = "stop"
+        m.photoProgressAnim.control = "stop"
     else
         m.emptyStateGroup.visible = false
         m.currentPhotoIndex = 0
         m.posterA.uri = m.photos[0]
         m.posterA.opacity = 1.0
+        m.posterA.scale = [1.0, 1.0]
         m.posterB.opacity = 0.0
         m.posterB.uri = ""
         m.activePoster = "A"
         updatePhotoCounterHUD()
-        if m.photos.Count() > 1 then m.slideshowTimer.control = "start"
+        startKenBurnsForActivePoster()
+        if m.photos.Count() > 1
+            m.slideshowTimer.control = "start"
+            restartPhotoProgress()
+        end if
     end if
+end sub
+
+sub shuffleCurrentPhotoList(keepFirstUri as String)
+    pool = []
+    for each uri in m.orderedPhotos
+        if uri <> keepFirstUri then pool.Push(uri)
+    end for
+    for i = pool.Count() - 1 to 1 step -1
+        j = Rnd(i + 1) - 1
+        tmp = pool[i]
+        pool[i] = pool[j]
+        pool[j] = tmp
+    end for
+    if keepFirstUri <> ""
+        m.photos = [keepFirstUri]
+    else
+        m.photos = []
+    end if
+    for each uri in pool
+        m.photos.Push(uri)
+    end for
 end sub
 
 function makeNaturalSortKey(name as String) as String
@@ -281,14 +492,17 @@ sub showPhotoAtIndex(newIndex as Integer)
 
     if m.activePoster = "A"
         m.pendingPoster = "B"
+        m.posterB.scale = [1.0, 1.0]
         m.posterB.uri = nextUri
         if m.posterB.loadStatus = "ready" then startCrossfadeToB()
     else
         m.pendingPoster = "A"
+        m.posterA.scale = [1.0, 1.0]
         m.posterA.uri = nextUri
         if m.posterA.loadStatus = "ready" then startCrossfadeToA()
     end if
     updatePhotoCounterHUD()
+    restartPhotoProgress()
 end sub
 
 sub onPosterBLoadStatus()
@@ -313,12 +527,14 @@ sub startCrossfadeToB()
     m.pendingPoster = ""
     m.activePoster = "B"
     m.fadeAtoB.control = "start"
+    startKenBurnsForActivePoster()
 end sub
 
 sub startCrossfadeToA()
     m.pendingPoster = ""
     m.activePoster = "A"
     m.fadeBtoA.control = "start"
+    startKenBurnsForActivePoster()
 end sub
 
 sub onFadeAtoBState()
@@ -353,10 +569,18 @@ sub toggleSlideshowPause()
     m.isSlideshowPaused = not m.isSlideshowPaused
     if m.isSlideshowPaused
         m.slideshowTimer.control = "stop"
+        m.photoProgressAnim.control = "stop"
+        m.kenBurnsA.control = "stop"
+        m.kenBurnsB.control = "stop"
         showToast("PHOTO SLIDESHOW PAUSED", "Staying on Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + m.photos.Count().ToStr(), "Press [Play] Anytime to Resume Slideshow")
     else
-        if m.photos.Count() > 1 then m.slideshowTimer.control = "start"
-        showToast("PHOTO SLIDESHOW RESUMED", "Changing Photos Every 12 Seconds", "Use [Left / Right] for Next Photo or [Rew / FF] to Jump 10 Photos")
+        if m.photos.Count() > 1
+            m.slideshowTimer.control = "start"
+            restartPhotoProgress()
+            startKenBurnsForActivePoster()
+        end if
+        secs = m.speedOptions[m.speedIdx]
+        showToast("PHOTO SLIDESHOW RESUMED", "Changing Photos Every " + secs.ToStr() + " Seconds", "Use [Left / Right] for Next Photo or [Rew / FF] to Jump 10 Photos")
     end if
     updatePhotoCounterHUD()
 end sub
@@ -366,22 +590,9 @@ sub toggleShuffleMode()
     currentUri = m.photos[m.currentPhotoIndex]
     m.isShuffleMode = not m.isShuffleMode
     if m.isShuffleMode
-        pool = []
-        for each uri in m.orderedPhotos
-            if uri <> currentUri then pool.Push(uri)
-        end for
-        for i = pool.Count() - 1 to 1 step -1
-            j = Rnd(i + 1) - 1
-            tmp = pool[i]
-            pool[i] = pool[j]
-            pool[j] = tmp
-        end for
-        m.photos = [currentUri]
-        for each uri in pool
-            m.photos.Push(uri)
-        end for
+        shuffleCurrentPhotoList(currentUri)
         m.currentPhotoIndex = 0
-        showToast("SHUFFLE MODE ON", "Showing Family Photos in Random Order", "Press [OK] Anytime to Return to Storybook Order")
+        showToast("SHUFFLE MODE ON", "Showing Family Photos in Random Order", "Saved Automatically for Next Time")
     else
         m.photos = []
         foundIdx = 0
@@ -391,36 +602,39 @@ sub toggleShuffleMode()
             if uri = currentUri then foundIdx = i
         end for
         m.currentPhotoIndex = foundIdx
-        showToast("STORYBOOK ORDER ON", "Showing Family Photos in Numerical Order", "Press [OK] Anytime to Shuffle Photos")
+        showToast("STORYBOOK ORDER ON", "Showing Family Photos in Numerical Order", "Saved Automatically for Next Time")
     end if
+    savePreferences()
     updatePhotoCounterHUD()
 end sub
 
 sub updatePhotoCounterHUD()
     total = m.photos.Count()
     if total = 0 then return
-    modeText = "STORYBOOK ORDER"
-    if m.isShuffleMode then modeText = "SHUFFLE MODE"
+    secs = m.speedOptions[m.speedIdx].ToStr() + "s"
+    modeText = "STORYBOOK"
+    if m.isShuffleMode then modeText = "SHUFFLE"
     if m.isSlideshowPaused
         m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM  •  PAUSED"
         m.photoCounterLabel.color = "0xFFD54FFF"
-        m.photoSubLabel.text = modeText + "  •  Press [Play] to Resume"
+        m.photoSubLabel.text = modeText + "  •  Press [Play] to Resume  •  [OK] 100 Stations"
     else
-        m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM  •  " + modeText
+        m.photoHeaderLabel.text = "FAMILY PHOTO ALBUM  •  " + modeText + "  •  " + secs
         m.photoCounterLabel.color = "0xFFFFFFFF"
-        m.photoSubLabel.text = "[Left/Right] Photo  •  [OK] Shuffle  •  [Play] Pause"
+        m.photoSubLabel.text = "[Left/Right] Photo  •  [OK] 100 Stations  •  [Play] Pause  •  [Replay] Mute"
     end if
     m.photoCounterLabel.text = "Photo " + (m.currentPhotoIndex + 1).ToStr() + " of " + total.ToStr()
 end sub
 
 ' =============================================================================
-' LIVE RADIO & REAL-TIME ALBUM COVER ART ENGINE
+' LIVE RADIO, STREAM AUTO-RECOVERY & EVERY-SONG HD ALBUM COVER ENGINE
 ' =============================================================================
 
 sub loadCurrentVibe()
     vibe = m.vibes[m.currentVibeIndex]
     m.currentStationList = vibe.curated
     m.currentStationIndex = 0
+    m.retryCount = 0
     playCurrentStation()
 
     if m.radioTask <> invalid then m.radioTask.control = "stop"
@@ -469,22 +683,35 @@ sub playCurrentStation()
     m.radioPlayer.mute = m.isMuted
     m.radioPlayer.control = "play"
 
+    saveLastStation(station, vibe.label)
+
     m.hudAlbumPoster.uri = ""
     m.heroAlbumPoster.uri = ""
     m.lastArtQuery = ""
     artQ = getDefaultArtQueryForStation(station.name, vibe.label)
     requestAlbumArt("", artQ, station.url)
     updateRadioHUD()
-    showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), station.name, "Press [UP / DOWN] for Other Genres   •   Press [ OK ] for 100 Stations & Voice Search")
+    showToast("GENRE " + genreNum + "  •  " + UCase(vibe.label), station.name, "Press [UP / DOWN] for Other Genres   •   Press [ OK ] for 100 Stations & Favorites")
 end sub
 
 sub onAudioStateChange()
     state = m.radioPlayer.state
-    if state = "error" and m.currentStationList <> invalid and m.currentStationList.Count() > 1
-        m.currentStationIndex = m.currentStationIndex + 1
-        if m.currentStationIndex < m.currentStationList.Count() then playCurrentStation()
-    else if state = "playing" or state = "buffering"
+    if state = "playing"
+        m.retryCount = 0
+        if not m.isMuted then m.hudEqGroup.visible = true
         updateRadioHUD()
+    else if state = "buffering"
+        updateRadioHUD()
+    else if state = "error" or state = "finished"
+        if m.currentStationList <> invalid and m.currentStationList.Count() > 1 and m.retryCount < m.currentStationList.Count()
+            m.retryCount = m.retryCount + 1
+            m.currentStationIndex = (m.currentStationIndex + 1) mod m.currentStationList.Count()
+            playCurrentStation()
+        else if m.retryCount < 2 and m.activePlayingUrl <> ""
+            m.retryCount = m.retryCount + 1
+            m.radioPlayer.control = "stop"
+            m.radioPlayer.control = "play"
+        end if
     end if
 end sub
 
@@ -493,9 +720,11 @@ sub toggleMute()
     m.radioPlayer.mute = m.isMuted
     if m.isMuted
         m.eqPulseAnim.control = "stop"
+        m.hudEqGroup.visible = false
         showToast("RADIO AUDIO MUTED", "Music is Currently Muted", "Press [Replay] on Your Remote to Unmute Music")
     else
         m.eqPulseAnim.control = "start"
+        m.hudEqGroup.visible = true
         showToast("RADIO AUDIO UNMUTED", m.radioStatusLabel.text, "Playing Live Radio")
     end if
     updateRadioHUD()
@@ -555,7 +784,6 @@ sub onNowPlayingTimerFire()
         end if
         return
     end if
-    ' Poll live ICY StreamTitle in background for http:// streams
     requestAlbumArt("", "", m.activePlayingUrl)
 end sub
 
@@ -612,10 +840,10 @@ sub updateRadioHUD()
     m.stationsNowPlayingLabel.text = stationName
 
     if m.currentSongTitle <> ""
-        m.nowPlayingLabel.text = "Now Playing: " + m.currentSongTitle + "   •   [OK] 100 Stations"
+        m.nowPlayingLabel.text = "Now Playing: " + m.currentSongTitle
         m.stationsSongLabel.text = m.currentSongTitle
     else
-        m.nowPlayingLabel.text = "Live Broadcast   •   Press [ OK ] for 100 Stations & Voice Search"
+        m.nowPlayingLabel.text = "Live Broadcast   •   Press [ OK ] for 100 Stations & Favorites"
         m.stationsSongLabel.text = "Live Broadcast Stream"
     end if
 end sub
@@ -627,7 +855,7 @@ sub showToast(title as String, message as String, subText = "" as String)
     if subText <> ""
         m.toastSubLabel.text = subText
     else
-        m.toastSubLabel.text = "Press [UP / DOWN] to Change Genre   •   Press [ * ] for 100 Stations"
+        m.toastSubLabel.text = "Press [UP / DOWN] to Change Genre   •   Press [ OK ] for 100 Stations"
     end if
     m.clockGroup.visible = false
     m.toastGroup.visible = true
@@ -642,7 +870,7 @@ sub onToastTimerFire()
 end sub
 
 ' =============================================================================
-' POLISHED PANDORA-FOR-TV 100-STATION BROWSER, VOICE MIC & ANIMATIONS
+' POLISHED 100-STATION BROWSER, FAVORITES, SPEED & VOICE SEARCH
 ' =============================================================================
 
 sub buildStationGridUI()
@@ -703,13 +931,19 @@ end sub
 
 sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
     total = m.filteredStations.Count()
-    if m.stationsSearchQuery <> ""
+    if m.isShowingFavorites
+        m.stationsHeaderTitle.text = "FAVORITE STATIONS  (" + total.ToStr() + ")"
+    else if m.stationsSearchQuery <> ""
         m.stationsHeaderTitle.text = "SEARCH: " + UCase(m.stationsSearchQuery) + "  (" + total.ToStr() + ")"
-        m.searchBoxLabel.text = "Search: " + m.stationsSearchQuery + "   (Press OK for Mic / Keyboard)"
+    else
+        m.stationsHeaderTitle.text = "FAMILY RADIO  •  " + total.ToStr() + " STATIONS"
+    end if
+
+    if m.stationsSearchQuery <> ""
+        m.searchBoxLabel.text = m.stationsSearchQuery
         m.searchBoxLabel.color = "0xFFFFFFFF"
     else
-        m.stationsHeaderTitle.text = "PANDORA RADIO  •  " + total.ToStr() + " STATIONS"
-        m.searchBoxLabel.text = "Press OK to Speak into Remote Mic or Type..."
+        m.searchBoxLabel.text = "Mic / Search..."
         m.searchBoxLabel.color = "0xB0BEC5FF"
     end if
 
@@ -718,13 +952,21 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
     m.micBadgeBg.color = "0x1E88E5FF"
     m.showAllBtnBorder.color = "0x28354AFF"
     m.showAllBtnBg.color = "0x111A2BFF"
+    m.favBtnBorder.color = "0x28354AFF"
+    m.favBtnBg.color = "0x111A2BFF"
     m.shuffleBtnBorder.color = "0x28354AFF"
     m.shuffleBtnBg.color = "0x111A2BFF"
+    m.speedBtnBorder.color = "0x28354AFF"
+    m.speedBtnBg.color = "0x111A2BFF"
+
+    m.favBtnLabel.text = "Favorites (" + getFavoritesCount().ToStr() + ")"
     if m.isShuffleMode
-        m.shuffleBtnLabel.text = "Order: Shuffle"
+        m.shuffleBtnLabel.text = "Shuffle"
     else
-        m.shuffleBtnLabel.text = "Order: Storybook"
+        m.shuffleBtnLabel.text = "Storybook"
     end if
+    m.speedBtnLabel.text = "Speed: " + m.speedOptions[m.speedIdx].ToStr() + "s"
+
     if m.stationsFocusArea = "search"
         if m.stationsTopFocusIdx = 0
             m.searchBoxBorder.color = "0xFFD54FFF"
@@ -733,9 +975,15 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
         else if m.stationsTopFocusIdx = 1
             m.showAllBtnBorder.color = "0xFFD54FFF"
             m.showAllBtnBg.color = "0x1B2B48FF"
-        else
+        else if m.stationsTopFocusIdx = 2
+            m.favBtnBorder.color = "0xFFD54FFF"
+            m.favBtnBg.color = "0x1B2B48FF"
+        else if m.stationsTopFocusIdx = 3
             m.shuffleBtnBorder.color = "0xFFD54FFF"
             m.shuffleBtnBg.color = "0x1B2B48FF"
+        else
+            m.speedBtnBorder.color = "0xFFD54FFF"
+            m.speedBtnBg.color = "0x1B2B48FF"
         end if
     end if
 
@@ -745,7 +993,7 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
         for i = 0 to 8
             m.stationCards[i].group.visible = false
         end for
-        m.stationsPageLabel.text = "0 Stations Found   •   Move Right to 'Show All 100' or Press [ Back ] to Return to Photos"
+        m.stationsPageLabel.text = "0 Stations Found   •   Select 'All 100' Above or Press [Back] for Photos"
         return
     end if
 
@@ -770,14 +1018,25 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
         if idx < total
             st = m.filteredStations[idx]
             card.group.visible = true
-            card.numBadge.text = "STATION " + (idx + 1).ToStr() + "  •  " + UCase(st.genre)
+            isFav = (m.favoriteUrls.DoesExist(st.url) and m.favoriteUrls[st.url] = true)
+            favPrefix = ""
+            if isFav then favPrefix = "★  "
+            card.numBadge.text = favPrefix + "STATION " + (idx + 1).ToStr() + "  •  " + UCase(st.genre)
+            if isFav
+                card.numBadge.color = "0xFFD54FFF"
+            else
+                card.numBadge.color = "0x80DEEAFF"
+            end if
             card.titleLbl.text = st.name
             card.accent.color = st.color
             if st.url = m.activePlayingUrl
                 card.playingLbl.text = "NOW PLAYING LIVE"
                 card.playingLbl.color = "0x00E676FF"
+            else if isFav
+                card.playingLbl.text = "★ FAVORITE  •  [OK] Listen  •  [Play] Unstar"
+                card.playingLbl.color = "0xFFD54FFF"
             else
-                card.playingLbl.text = "Press [OK] to Listen"
+                card.playingLbl.text = "[OK] Listen   •   [Play] Star Favorite"
                 card.playingLbl.color = "0x78909CFF"
             end if
 
@@ -802,7 +1061,7 @@ sub renderStationsGrid(animateFocus = true as Boolean, pageDir = 0 as Integer)
     end for
 
     m.gridFocusRing.visible = (m.stationsFocusArea = "grid")
-    m.stationsPageLabel.text = "Stations " + (pageStart + 1).ToStr() + "-" + (pageEnd + 1).ToStr() + " of " + total.ToStr() + "   •   [UP] at Top Row = Mic Search   •   [OK] Play   •   [Rew/FF] Page   •   [ Back ] Photos"
+    m.stationsPageLabel.text = "Stations " + (pageStart + 1).ToStr() + "-" + (pageEnd + 1).ToStr() + " of " + total.ToStr() + "   •   [OK] Play   •   [Play] Star Favorite   •   [Rew/FF] Page   •   [Back] Photos"
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
@@ -863,7 +1122,7 @@ function handleStationsKeyEvent(key as String) as Boolean
             m.stationsTopFocusIdx = m.stationsTopFocusIdx - 1
             syncSearchFocusAnim()
             renderStationsGrid(false, 0)
-        else if key = "right" and m.stationsTopFocusIdx < 2
+        else if key = "right" and m.stationsTopFocusIdx < 4
             m.stationsTopFocusIdx = m.stationsTopFocusIdx + 1
             syncSearchFocusAnim()
             renderStationsGrid(false, 0)
@@ -875,12 +1134,21 @@ function handleStationsKeyEvent(key as String) as Boolean
             if m.stationsTopFocusIdx = 0
                 openStationSearchDialog()
             else if m.stationsTopFocusIdx = 1
+                m.isShowingFavorites = false
                 filterStationsByQuery("")
                 m.stationsFocusArea = "grid"
                 syncSearchFocusAnim()
                 renderStationsGrid(true, -1)
-            else
+            else if m.stationsTopFocusIdx = 2
+                applyFavoritesFilter()
+                if m.filteredStations.Count() > 0 then m.stationsFocusArea = "grid"
+                syncSearchFocusAnim()
+                renderStationsGrid(true, 1)
+            else if m.stationsTopFocusIdx = 3
                 toggleShuffleMode()
+                renderStationsGrid(false, 0)
+            else
+                cycleSlideshowSpeed()
                 renderStationsGrid(false, 0)
             end if
         end if
@@ -918,6 +1186,8 @@ function handleStationsKeyEvent(key as String) as Boolean
         m.stationsSelectedIdx = m.stationsSelectedIdx + 9
         if m.stationsSelectedIdx >= total then m.stationsSelectedIdx = total - 1
         renderStationsGrid(false, 1)
+    else if key = "play" and total > 0
+        toggleFavoriteStation(m.filteredStations[m.stationsSelectedIdx])
     else if key = "OK" and total > 0
         playStationFromCatalog(m.filteredStations[m.stationsSelectedIdx])
         renderStationsGrid(false, 0)
@@ -938,20 +1208,25 @@ sub playStationFromCatalog(st as Object)
     m.activePlayingUrl = st.url
     m.currentStationList = [st]
     m.currentStationIndex = 0
+    m.retryCount = 0
     m.radioPlayer.control = "stop"
     m.radioPlayer.content = content
     m.radioPlayer.mute = m.isMuted
     m.radioPlayer.control = "play"
 
-    m.radioHeaderLabel.text = "100-STATION BROWSER  •  " + UCase(st.genre)
+    stGenre = "Radio"
+    if st.DoesExist("genre") and st.genre <> "" then stGenre = st.genre
+    saveLastStation(st, stGenre)
+
+    m.radioHeaderLabel.text = "100-STATION BROWSER  •  " + UCase(stGenre)
     m.radioStatusLabel.text = st.name
-    m.nowPlayingLabel.text = "Live Broadcast   •   Press [ OK ] for 100 Stations"
+    m.nowPlayingLabel.text = "Live Broadcast   •   Press [ OK ] for 100 Stations & Favorites"
     m.stationsNowPlayingLabel.text = st.name
     m.stationsSongLabel.text = "Connecting Live Stream..."
     m.hudAlbumPoster.uri = ""
     m.heroAlbumPoster.uri = ""
     m.lastArtQuery = ""
-    artQ = getDefaultArtQueryForStation(st.name, st.genre)
+    artQ = getDefaultArtQueryForStation(st.name, stGenre)
     requestAlbumArt("", artQ, st.url)
 end sub
 
@@ -973,9 +1248,11 @@ sub onSearchDialogButton()
     m.searchDialog.close = true
     m.searchDialog = invalid
     if btn = 0
+        m.isShowingFavorites = false
         filterStationsByQuery(query)
         if m.filteredStations.Count() > 0 then m.stationsFocusArea = "grid"
     else if btn = 1
+        m.isShowingFavorites = false
         filterStationsByQuery("")
         m.stationsFocusArea = "grid"
     end if

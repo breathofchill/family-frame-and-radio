@@ -6,12 +6,12 @@ sub runArtworkSearch()
     rawQuery = ""
     if m.top.query <> invalid then rawQuery = m.top.query.Trim()
 
-    ' If no song query was provided by Roku <Audio>, poll live ICY StreamTitle from http:// stream
+    ' If no song query was provided by Roku <Audio>, detect live song title from stream
     if rawQuery = "" and m.top.streamUrl <> invalid and m.top.streamUrl <> ""
-        icyTitle = fetchIcySongTitle(m.top.streamUrl)
-        if icyTitle <> ""
-            rawQuery = icyTitle
-            m.top.songTitle = icyTitle
+        liveTitle = fetchLiveSongTitle(m.top.streamUrl)
+        if liveTitle <> ""
+            rawQuery = liveTitle
+            m.top.songTitle = liveTitle
         end if
     end if
 
@@ -29,6 +29,64 @@ sub runArtworkSearch()
         end if
     end for
 end sub
+
+function fetchLiveSongTitle(streamUrl as String) as String
+    lowUrl = LCase(streamUrl)
+    ' Support SomaFM HTTPS live song JSON API
+    if Instr(1, lowUrl, "somafm.com/") > 0
+        somaTitle = fetchSomaFmSongTitle(lowUrl)
+        if somaTitle <> "" then return somaTitle
+    end if
+    ' Support HTTP Icecast/Shoutcast ICY StreamTitle (with redirect following)
+    if Left(lowUrl, 7) = "http://"
+        return fetchIcySongTitle(streamUrl, 0)
+    end if
+    return ""
+end function
+
+function fetchSomaFmSongTitle(lowUrl as String) as String
+    slashIdx = 0
+    for i = Len(lowUrl) to 1 step -1
+        if Mid(lowUrl, i, 1) = "/"
+            slashIdx = i
+            exit for
+        end if
+    end for
+    if slashIdx = 0 then return ""
+    tail = Mid(lowUrl, slashIdx + 1)
+    dashIdx = Instr(1, tail, "-")
+    if dashIdx <= 1 then return ""
+    chan = Left(tail, dashIdx - 1)
+    apiUrl = "https://somafm.com/songs/" + chan + ".json"
+
+    http = CreateObject("roUrlTransfer")
+    port = CreateObject("roMessagePort")
+    http.SetMessagePort(port)
+    http.SetUrl(apiUrl)
+    http.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    http.InitClientCertificates()
+    http.AddHeader("User-Agent", "FamilyFrameAndRadioRoku/4.0")
+    if http.AsyncGetToString()
+        msg = wait(3500, port)
+        if type(msg) = "roUrlEvent" and msg.GetResponseCode() = 200
+            json = ParseJson(msg.GetString())
+            if type(json) = "roAssociativeArray" and json.DoesExist("songs") and type(json.songs) = "roArray" and json.songs.Count() > 0
+                s0 = json.songs[0]
+                if type(s0) = "roAssociativeArray"
+                    artistStr = ""
+                    titleStr = ""
+                    if s0.DoesExist("artist") and s0.artist <> invalid then artistStr = s0.artist.Trim()
+                    if s0.DoesExist("title") and s0.title <> invalid then titleStr = s0.title.Trim()
+                    if artistStr <> "" and titleStr <> "" then return artistStr + " - " + titleStr
+                    if titleStr <> "" then return titleStr
+                end if
+            end if
+        else
+            http.AsyncCancel()
+        end if
+    end if
+    return ""
+end function
 
 function buildSearchQueries(rawQuery as String, fallbackRaw as Dynamic) as Object
     queries = []
@@ -75,7 +133,7 @@ function searchItunes(q as String) as String
         http.SetUrl(url)
         http.SetCertificatesFile("common:/certs/ca-bundle.crt")
         http.InitClientCertificates()
-        http.AddHeader("User-Agent", "FamilyFrameAndRadioRoku/3.2")
+        http.AddHeader("User-Agent", "FamilyFrameAndRadioRoku/4.0")
         http.AddHeader("Accept", "application/json")
         if http.AsyncGetToString()
             msg = wait(5000, port)
@@ -86,7 +144,7 @@ function searchItunes(q as String) as String
                     if type(first) = "roAssociativeArray" and first.DoesExist("artworkUrl100") and first.artworkUrl100 <> invalid
                         rawArt = first.artworkUrl100
                         if type(rawArt) = "roString" or type(rawArt) = "String"
-                            return rawArt.Replace("100x100bb", "400x400bb")
+                            return rawArt.Replace("100x100bb", "600x600bb")
                         end if
                     end if
                 end if
@@ -98,7 +156,8 @@ function searchItunes(q as String) as String
     return ""
 end function
 
-function fetchIcySongTitle(streamUrl as String) as String
+function fetchIcySongTitle(streamUrl as String, depth as Integer) as String
+    if depth > 2 then return ""
     if Left(LCase(streamUrl), 7) <> "http://" then return ""
 
     rest = Mid(streamUrl, 8)
@@ -155,8 +214,14 @@ function fetchIcySongTitle(streamUrl as String) as String
                 headerStr = allBytes.ToAsciiString()
                 hEnd = Instr(1, headerStr, crlf + crlf)
                 if hEnd > 0
+                    headerBlock = Left(headerStr, hEnd)
+                    redirUrl = parseRedirectLocation(headerBlock)
+                    if redirUrl <> ""
+                        sock.Close()
+                        return fetchIcySongTitle(redirUrl, depth + 1)
+                    end if
                     headerEnd = hEnd + 3
-                    metaint = parseIcyMetaInt(Left(headerStr, hEnd))
+                    metaint = parseIcyMetaInt(headerBlock)
                     if metaint <= 0 then exit while
                 end if
             end if
@@ -183,6 +248,22 @@ function fetchIcySongTitle(streamUrl as String) as String
     end while
 
     sock.Close()
+    return ""
+end function
+
+function parseRedirectLocation(headers as String) as String
+    lines = headers.Split(Chr(10))
+    if lines.Count() = 0 then return ""
+    statusLine = lines[0]
+    if Instr(1, statusLine, " 301") = 0 and Instr(1, statusLine, " 302") = 0 and Instr(1, statusLine, " 307") = 0
+        return ""
+    end if
+    for each line in lines
+        trimmed = line.Trim()
+        if Left(LCase(trimmed), 9) = "location:"
+            return Mid(trimmed, 10).Trim()
+        end if
+    end for
     return ""
 end function
 
